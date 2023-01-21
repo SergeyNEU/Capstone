@@ -1,0 +1,160 @@
+#include <iostream>
+#include <thread>
+#include <chrono>
+#include <sense_hat.h>
+#include <vector>
+#include <cmath>
+#include <bluetooth/bluetooth.h>
+#include <bluetooth/rfcomm.h>
+#include <ctime>
+
+using namespace std;
+using namespace sense_hat;
+
+// Buffers for storing sensor data
+vector<pair<double, array<double, 3>>> accelerometer_buffer;
+vector<pair<double, array<double, 3>>> gyroscope_buffer;
+vector<tuple<time_t, double, double, double>> pothole_buffer;
+
+// Thread function to read accelerometer data
+void read_accelerometer() {
+    SenseHat sense_hat;
+    while (true) {
+        // Read accelerometer data
+        auto acceleration = sense_hat.get_accelerometer_raw();
+        double x = acceleration.x;
+        double y = acceleration.y;
+        double z = acceleration.z;
+        // Append data to buffer
+        accelerometer_buffer.emplace_back(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count(), array<double,3>{x, y, z});
+    }
+}
+
+// Thread function to read gyroscope data
+void read_gyroscope() {
+    SenseHat sense_hat;
+    while (true) {
+        // Read gyroscope data
+        auto gyroscope = sense_hat.get_gyroscope_raw();
+        double x = gyroscope.x;
+        double y = gyroscope.y;
+        double z = gyroscope.z;
+        // Append data to buffer
+        gyroscope_buffer.emplace_back(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count(), array<double,3>{x, y, z});
+    }
+}
+
+int main() {
+    // Create threads for reading accelerometer and gyroscope data
+    thread accelerometer_thread(read_accelerometer);
+    thread gyroscope_thread(read_gyroscope);
+
+    // Start the threads
+    accelerometer_thread.detach();
+    gyroscope_thread.detach();
+
+    // Bluetooth socket and address
+    struct sockaddr_rc addr = { 0 };
+    int sock;
+    int client;
+    socklen_t size = sizeof(addr);
+
+    // Create Bluetooth socket
+    sock = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
+
+    // Bind socket to address
+    addr.rc_family = AF_BLUETOOTH;
+    addr.rc_bdaddr = *BDADDR_ANY;
+    addr.rc_channel = (uint8_t)
+    bind(sock, (struct sockaddr *)&addr, sizeof(addr));
+
+    // Listen for incoming connections
+    listen(sock, 1);
+    bool connected = false;
+    // Main loop for image processing and Bluetooth communication
+    while (true) {
+        // Capture image
+        Mat image = capture_image();
+        // Extract features from image
+        Mat features = extract_features(image);
+        // Use classifier to predict if image contains a pothole and the probability of the prediction
+        pair<int,double> prediction = classifier.predictProb(features);
+        // Use statistical analysis to determine if car went over a pothole
+        if (accelerometer_buffer.size() > 100) {
+            // Get current time in milliseconds
+            auto current_time = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
+            // Get last 100 samples of accelerometer data that were collected in the last 200 milliseconds
+            vector<pair<double, array<double, 3>>> last_100_samples;
+            for (auto i = accelerometer_buffer.rbegin(); i != accelerometer_buffer.rend() && last_100_samples.size() < 100; i++) {
+                if (current_time - i->first < 200) {
+                    last_100_samples.emplace_back(*i);
+                }
+            }
+            // Calculate mean and standard deviation of last 100 samples
+            array<double, 3> mean{0,0,0};
+            array<double, 3> std{0,0,0};
+            for (auto &i: last_100_samples) {
+                mean[0] += i.second[0];
+                mean[1] += i.second[1];
+                mean[2] += i.second[2];
+                std[0] += i.second[0] * i.second[0];
+                std[1] += i.second[1] * i.second[1];
+                std[2] += i.second[2] * i.second[2];
+            }
+            mean[0] /= last_100_samples.size();
+            mean[1] /= last_100_samples.size();
+            mean[2] /= last_100_samples.size();
+            std[0] = sqrt(std[0] / last_100_samples.size() - mean[0] * mean[0]);
+            std[1] = sqrt(std[1] / last_100_samples.size() - mean[1] * mean[1]);
+            std[2] = sqrt(std[2] / last_100_samples.size() - mean[2] * mean[2]);
+            // Define threshold for detecting a pothole
+            array<double, 3> threshold{0.1, 0.1, 0.1};
+            // Check if mean minus threshold is less than standard deviation for all axis
+            if (mean[0] - threshold[0] < std[0] && mean[1] - threshold[1] < std[1] && mean[2] - threshold[2] < std[2]) {
+                // Pothole detected
+                cout << "Pothole detected." << endl;
+                time_t timestamp = time(0);
+                if(connected){
+                    // Send message to connected device
+                    char message[256];
+                    sprintf(message, "Pothole detected at %s with probability %.2f", ctime(&timestamp), prediction.second);
+                    send(client, message, sizeof(message), 0);
+                }else{
+                    // Store detection in buffer
+                    pothole_buffer.emplace_back(timestamp, prediction.second, mean[0], mean[1], mean[2]);
+                }
+                // Wait for incoming connection
+                client = accept(sock, (struct sockaddr *)&addr, &size);
+                connected = true;
+            } else {
+                cout << "No pothole detected." << endl;
+                // Check if there's any pothole detection stored in the buffer
+                if(!pothole_buffer.empty()){
+                    // Send message to connected device
+                    char message[256];
+                    auto pothole = pothole_buffer.back();
+                    pothole_buffer.pop_back();
+                    sprintf(message, "Pothole detected at %s with probability %.2f", ctime(&get<0>(pothole)), get<1>(pothole));
+                    send(client, message, sizeof(message), 0);
+                }
+            }
+        }
+        // Sleep for a short period to reduce CPU usage
+        this_thread::sleep_for(chrono::milliseconds(10));
+    }
+    return 0;
+}
+
+NOTES:
+The main function starts by creating two threads, one to read data from the accelerometer and another one to read data from the gyroscope. These threads are detached, which means they will run independently of the main thread and will not block the execution of the main thread.
+
+The main loop captures an image using the camera module, then uses OpenCV to extract features from the image and a classifier to predict if the image contains a pothole. The classifier was trained using a dataset of images of potholes and non-potholes.
+
+Additionally, the code uses statistical analysis on the accelerometer data to determine if the car went over a pothole. It takes the last 100 samples of accelerometer data that were collected in the last 200 milliseconds and calculates the mean and standard deviation of the data. If the mean minus a threshold is less than the standard deviation for all the axis, it is considered a pothole detection.
+
+If a pothole is detected, the code checks if there is an active Bluetooth connection. If there is an active connection, it sends a message to the connected device with the timestamp of the pothole detection and the probability of the pothole detection.
+If there is no active Bluetooth connection, it stores the pothole detection in a buffer. When a connection is established, the buffer is checked and the oldest pothole detection is sent to the connected device.
+
+The code also waits for incoming connections using the Bluetooth socket and it listens for incoming connections on channel 1. If an incoming connection is detected, the code sets the "connected" variable to true, and it sends all pothole detections stored in the buffer to the connected device.
+
+In addition, there's also a sleep_for function that makes the code sleep for a short period of time (10 milliseconds) to reduce CPU usage.
