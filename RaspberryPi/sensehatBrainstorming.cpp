@@ -81,7 +81,7 @@ int main() {
             mean[0] /= last_100_samples.size();
             mean[1] /= last_100_samples.size();
             mean[2] /= last_100_samples.size();
-            std[0] = sqrt(std[0] / last_100_samples.
+            std[0] = sqrt(std[0] / last_100_samples.size() - mean[0] * mean[0]);
             std[1] = sqrt(std[1] / last_100_samples.size() - mean[1] * mean[1]);
             std[2] = sqrt(std[2] / last_100_samples.size() - mean[2] * mean[2]);
             // Define threshold for detecting a pothole
@@ -100,6 +100,7 @@ int main() {
     return 0;
 }
 
+/*
 NOTES:
 The code first creates two threads, one for reading accelerometer data and another for reading gyroscope data. The threads are detached, which means they run independently of the main program and the program can exit without waiting for the threads to finish. The accelerometer and gyroscope data is stored in two separate buffers, one for accelerometer data and another for gyroscope data.
 
@@ -108,3 +109,4 @@ The main program enters a loop where it captures an image using the Raspberry Pi
 After that, the program uses statistical analysis to determine if the car went over a pothole. For this, it takes the last 100 samples of accelerometer data that were collected in the last 0.2 seconds, calculates the mean and standard deviation of the samples, defines a threshold for detecting a pothole, and checks if the mean minus the threshold is less than the standard deviation for all axis. If this is true, it means that the car went over a pothole, otherwise, it means that the car didn't go over a pothole.
 
 Finally, the program sleeps for a short period to reduce CPU usage and repeat the process.
+*/

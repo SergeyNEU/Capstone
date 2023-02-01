@@ -1,0 +1,22 @@
+SQL data structure template
+
+CREATE TABLE potholes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    pothole_probability DOUBLE NOT NULL,
+    device_address VARCHAR(17) NOT NULL,
+    latitude DOUBLE NOT NULL,
+    longitude DOUBLE NOT NULL,
+    pothole_image LONGBLOB
+);
+
+NOTES:
+This data structure includes a table called "potholes" with the following columns:
+
+id: unique identifier for each pothole detection
+timestamp: timestamp for when the pothole detection occurred
+pothole_probability: probability of the image containing a pothole, as determined by the classifier
+device_address: the bluetooth address of the device that the pothole detection was sent from
+latitude and longitude: location data from the phone's GPS
+pothole_image: the image of the pothole detection
+

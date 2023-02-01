@@ -1,4 +1,6 @@
+/*
 Here's an example of how you can use machine learning models to classify the detected shapes as potholes or not using a dataset of images of potholes and non-potholes:
+*/
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/ml.hpp>
@@ -59,8 +61,9 @@ int main(int argc, char** argv) {
     return 0;
 }
 
-
+/*
 NOTES:
 This code uses the Support Vector Machine (SVM) algorithm to train a classifier using a dataset of images of potholes and non-potholes. It extracts features from the images, and then trains the classifier using the extracted features and the corresponding labels (1 for pothole images, 0 for non-pothole images). Once the classifier is trained, it is saved to a file, so it can be loaded later and used to make predictions on new images.
 
 I added a call to the setNumThreads() function to enable multithreading, where I passed the number of hardware threads available (std::thread::hardware_concurrency()) to it. This will allow the training process to use multiple threads to perform the computations in parallel, which can significantly speed up the process.
+*/

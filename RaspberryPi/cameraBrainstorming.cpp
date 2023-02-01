@@ -1,5 +1,6 @@
+/*
 Here's a basic example of how you can use the Raspberry Pi Camera Module V2 in C++ on a Raspberry Pi 4 Model 4 to capture an image:
-
+*/
 #include <raspicam/raspicam_cv.h>
 using namespace std;
  
@@ -19,7 +20,7 @@ int main(int argc, char **argv) {
     cv::imwrite("image.jpg", image);
     return 0;
 }
-
+/*
 NOTES:
 This code uses the raspicam_cv library, which provides a C++ API for the Raspberry Pi Camera Module. The code opens the camera, sets the image format and resolution, captures an image, and saves it to a file named "image.jpg" in the current working directory.
 
@@ -28,7 +29,7 @@ This code uses the raspicam_cv library, which provides a C++ API for the Raspber
 ----------------------------------------------------------------------------------------------------
 
 If we use the machine learning I describe in machineLearningBrainstorm... the classifier is loaded from the file "classifier.xml" at the beginning of the program. Then, the camera is opened and continuously captures images. For each image, it extracts features, and then uses the classifier to predict whether the image contains a pothole or not.
-
+*/
 
 #include <raspicam/raspicam_cv.h>
 #include <opencv2/ml.hpp>
@@ -81,6 +82,7 @@ camera.release();
 return 0;
 }
 
+/*
 NOTES:
 In this example, I added a new function called "process_image" that takes an image, the classifier, and a stop flag as input. This function runs in a separate thread and continuously processes images as they come in, using the classifier to predict whether the image contains a pothole or not. The while loop in the main function captures images from the camera, and the processing thread uses this image to predict if it contains a pothole or not.
 
@@ -89,3 +91,4 @@ To stop the processing thread, I used an atomic boolean flag "stop_flag", this a
 I also used the "thread" library to create a new thread for the function "process_image", this allows the processing of images to happen concurrently with the capturing of images.
 
 Additionally, I used the "std::ref" function to pass the image, classifier, and stop_flag by reference, this means that the values passed to the thread will be updated in the main thread and will be visible to the processing thread.
+*/
