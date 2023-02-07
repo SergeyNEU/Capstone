@@ -12,3 +12,6 @@ For this project, we will primarily be using [S3 Buckets](https://aws.amazon.com
 
 I am the root, or primary, user for our project account. The email for this account is under my Northeastern email, kolli.na@northeastern.edu - If you would like access, reach out to me, and I will add you to the Access Control List (IAM user). username: kolli.na@northeastern.edu ; password: Sn1taXkCPBT07V4!@
 
+**AWS Links**
+
+1. [Uploading to S3 from Mobile App](https://aws.amazon.com/blogs/compute/uploading-to-amazon-s3-directly-from-a-web-or-mobile-application/)
