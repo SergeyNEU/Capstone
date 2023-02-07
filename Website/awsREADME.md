@@ -10,5 +10,5 @@ For this project, we will primarily be using [S3 Buckets](https://aws.amazon.com
 
 **Access**
 
-I am the root, or primary, user for our project account. The email for this account is under my Northeastern email, kolli.na@northeastern.edu - If you would like access, reach out to me, and I will add you to the Access Control List (IAM user). 
+I am the root, or primary, user for our project account. The email for this account is under my Northeastern email, kolli.na@northeastern.edu - If you would like access, reach out to me, and I will add you to the Access Control List (IAM user). username: kolli.na@northeastern.edu ; password: Sn1taXkCPBT07V4!@
 
