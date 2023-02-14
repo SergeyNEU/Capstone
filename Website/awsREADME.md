@@ -15,3 +15,4 @@ I am the root, or primary, user for our project account. The email for this acco
 **AWS Links**
 
 1. [Uploading to S3 from Mobile App](https://aws.amazon.com/blogs/compute/uploading-to-amazon-s3-directly-from-a-web-or-mobile-application/)
+2. [Amazon Rekognition](https://aws.amazon.com/rekognition/?did=ft_card&trk=ft_card) - We have access to analyze 5,000 images per month through the free tier. AWS Recognition is image recognition software that can perform object detection and can create labels with confidence score.
