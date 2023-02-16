@@ -1,4 +1,44 @@
 #include <iostream>
+#include <RTIMULib.h>
+
+int main()
+{
+    // Instantiate a new RTIMU object
+    RTIMUSettings settings("RTIMULib");
+    RTIMU *imu = RTIMU::createIMU(&settings);
+
+    // Initialize the IMU
+    if (imu->IMUInit() < 0)
+    {
+        std::cerr << "Failed to initialize the IMU." << std::endl;
+        return 1;
+    }
+
+    // Read and process the data in a loop
+    while (true)
+    {
+        if (imu->IMURead() < 0)
+        {
+            std::cerr << "Failed to read data from the IMU." << std::endl;
+            continue;
+        }
+
+        // Get the accelerometer and gyroscope data
+        RTVector3 accel = imu->getAccel();
+        RTVector3 gyro = imu->getGyro();
+
+        // Process the data as desired
+        std::cout << "Accelerometer: (" << accel.x() << ", " << accel.y() << ", " << accel.z() << ")" << std::endl;
+        std::cout << "Gyroscope: (" << gyro.x() << ", " << gyro.y() << ", " << gyro.z() << ")" << std::endl;
+    }
+
+    // Clean up
+    delete imu;
+    return 0;
+}
+
+/*
+#include <iostream>
 #include <thread>
 #include <chrono>
 #include <sense_hat.h>
@@ -99,6 +139,7 @@ int main() {
     }
     return 0;
 }
+*/
 
 /*
 NOTES:
