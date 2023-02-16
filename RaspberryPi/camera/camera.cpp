@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
     // Capture a frame from the camera and save the ROI to a file
     if (cap.read(image)) {
         cv::Mat roi_image = image(roi);
-        cv::imwrite("Output/camera.jpg", roi_image);
+        cv::imwrite("camera.jpg", roi_image);
     } else {
         cerr << "Error capturing frame from camera" << endl;
         return -1;
