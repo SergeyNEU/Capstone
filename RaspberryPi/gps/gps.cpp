@@ -12,6 +12,26 @@ using namespace std;
 #define MAX_BUFFER_SIZE 1024
 
 // Function to open serial port
+int openSerialPort(const char *portName);
+
+// Function to configure serial port
+void configureSerialPort(int serialPort);
+
+// Function to parse NMEA message
+void parseNmeaMessage(int serialPort);
+
+// Main Function
+int main()
+{
+    int serialPort = openSerialPort("/dev/ttyUSB0");
+    configureSerialPort(serialPort);
+    parseNmeaMessage(serialPort);
+    // Close serial port
+    close(serialPort);
+    return 0;
+}
+
+// Function to open serial port
 int openSerialPort(const char *portName)
 {
     int serialPort = open(portName, O_RDONLY | O_NOCTTY | O_SYNC);
@@ -30,7 +50,6 @@ void configureSerialPort(int serialPort)
     memset(&serialConfig, 0, sizeof(serialConfig)); // Set baud rate to 9600
     cfsetispeed(&serialConfig, B9600);
     cfsetospeed(&serialConfig, B9600);
-
     // Set character size to 8 bits
     serialConfig.c_cflag &= ~CSIZE;
     serialConfig.c_cflag |= CS8;
@@ -56,10 +75,9 @@ void configureSerialPort(int serialPort)
     }
 }
 
-int main()
+// Function to parse NMEA message
+void parseNmeaMessage(int serialPort)
 {
-    int serialPort = openSerialPort("/dev/ttyUSB0");
-    configureSerialPort(serialPort);
     char buffer[MAX_BUFFER_SIZE];
     int bytesRead = 0;
     while (true)
@@ -139,13 +157,4 @@ int main()
 
         sleep(1);
     }
-    // Close serial port
-    close(serialPort);
-    return 0;
 }
-
-/*
-    This C++ code reads NMEA data from a serial port, searches for GGA messages, and extracts and deciphers the information in those messages. 
-    It also verifies the checksum data and converts the UTC time in the message to EST time. 
-    The program prints out the extracted information in a formatted manner. 
-*/
