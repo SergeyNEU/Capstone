@@ -1,6 +1,17 @@
-gps:gps.o
-	g++ -Wall -o gps gps.o -O3
-gps.o: gps.cpp
-	g++ -Wall -c gps.cpp -O3
+CXX = g++
+CXXFLAGS = -Wall -O3
+LDFLAGS = 
+SOURCES = test.cpp gps.cpp
+OBJECTS = $(SOURCES:.cpp=.o)
+EXECUTABLE = gps
+
+all: $(EXECUTABLE)
+
+$(EXECUTABLE): $(OBJECTS)
+	$(CXX) $(OBJECTS) -o $@ $(LDFLAGS)
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
 clean:
-	rm gps.o gps
+	rm -f $(OBJECTS) $(EXECUTABLE)

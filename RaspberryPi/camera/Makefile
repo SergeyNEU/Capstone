@@ -1,6 +1,17 @@
-camera:camera.o
-	g++ -Wall -o camera camera.o -O3 `pkg-config --cflags --libs opencv4`
-camera.o: camera.cpp
-	g++ -Wall -c camera.cpp -O3 `pkg-config --cflags --libs opencv4`
+CXX = g++
+CXXFLAGS = -Wall -O3
+LDFLAGS = `pkg-config --cflags --libs opencv4`
+SOURCES = test.cpp camera.cpp
+OBJECTS = $(SOURCES:.cpp=.o)
+EXECUTABLE = camera
+
+all: $(EXECUTABLE)
+
+$(EXECUTABLE): $(OBJECTS)
+	$(CXX) $(OBJECTS) -o $@ $(LDFLAGS)
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
 clean:
-	rm camera.o camera
+	rm -f $(OBJECTS) $(EXECUTABLE)

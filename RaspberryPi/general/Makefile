@@ -8,7 +8,7 @@ OBJDIR = .
 SRC = $(wildcard $(SRCDIR)/*.cpp)
 OBJ = $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(SRC))
 
-TARGET = sensehat
+TARGET = main
 
 all: $(TARGET)
 

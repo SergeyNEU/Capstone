@@ -1,38 +1,15 @@
-#include <iostream>
-#include <string>
-#include <cstring>
-#include <cstdio>
-#include <fcntl.h>
-#include <termios.h>
-#include <unistd.h>
-#include <vector>
-
-using namespace std;
+#include "gps.hpp"
 
 #define MAX_BUFFER_SIZE 1024
 
-// Function to open serial port
-int openSerialPort(const char *portName);
-
-// Function to configure serial port
-void configureSerialPort(int serialPort);
-
-// Function to parse NMEA message
-void parseNmeaMessage(int serialPort);
-
-// Main Function
-int main()
+GPS::GPS()
 {
-    int serialPort = openSerialPort("/dev/ttyUSB0");
+    serialPort = openSerialPort("/dev/ttyUSB0");
     configureSerialPort(serialPort);
-    parseNmeaMessage(serialPort);
-    // Close serial port
-    close(serialPort);
-    return 0;
 }
 
 // Function to open serial port
-int openSerialPort(const char *portName)
+int GPS::openSerialPort(const char *portName)
 {
     int serialPort = open(portName, O_RDONLY | O_NOCTTY | O_SYNC);
     if (serialPort == -1)
@@ -44,7 +21,7 @@ int openSerialPort(const char *portName)
 }
 
 // Function to configure serial port
-void configureSerialPort(int serialPort)
+void GPS::configureSerialPort(int serialPort)
 {
     struct termios serialConfig;
     memset(&serialConfig, 0, sizeof(serialConfig)); // Set baud rate to 9600
@@ -53,7 +30,6 @@ void configureSerialPort(int serialPort)
     // Set character size to 8 bits
     serialConfig.c_cflag &= ~CSIZE;
     serialConfig.c_cflag |= CS8;
-
     // Set parity to none
     serialConfig.c_cflag &= ~PARENB;
 
@@ -76,7 +52,7 @@ void configureSerialPort(int serialPort)
 }
 
 // Function to parse NMEA message
-void parseNmeaMessage(int serialPort)
+void GPS::parse()
 {
     char buffer[MAX_BUFFER_SIZE];
     int bytesRead = 0;
@@ -88,14 +64,12 @@ void parseNmeaMessage(int serialPort)
         {
             perror("Error: Unable to read from serial port");
             exit(EXIT_FAILURE);
-        }
-
-        // Parse NMEA message
+        } // Parse NMEA message
         string nmeaMessage(buffer, bytesRead);
 
         size_t ggaPos = nmeaMessage.find("$GPGGA");
-        if (ggaPos != string::npos) // found GGA message
-        {
+        if (ggaPos != string::npos)
+        { // found GGA message
             // Extract GGA message
             string ggaString = nmeaMessage.substr(ggaPos);
             size_t endPos = ggaString.find("\r\n"); // find end of message
@@ -113,7 +87,6 @@ void parseNmeaMessage(int serialPort)
                 start = end + 1;
             }
             ggaValues.push_back(ggaString.substr(start)); // add last value
-
             // Print out GGA values and their meaning
             cout << "GGA Message:" << endl;
             cout << "  Time (UTC): " << ggaValues[1] << endl;
