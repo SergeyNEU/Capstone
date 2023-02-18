@@ -6,39 +6,39 @@
 
 typedef enum
 {
-    IMU_EN_SENSOR_TYPE_NULL,
-    IMU_EN_SENSOR_TYPE_ICM20948
-} IMU_EN_SENSOR_TYPE;
+    SENSOR_TYPE_NULL,
+    SENSOR_TYPE_ICM20948
+} SensorType;
 
 typedef struct
 {
-    float fRoll;
-    float fPitch;
-    float fYaw;
-} IMU_ST_ANGLES_DATA;
+    float roll;
+    float pitch;
+    float yaw;
+} AnglesData;
 
 typedef struct
 {
-    int16_t s16X;
-    int16_t s16Y;
-    int16_t s16Z;
-} IMU_ST_SENSOR_DATA;
+    int16_t x;
+    int16_t y;
+    int16_t z;
+} SensorData;
 
-class SenesHat
+class SenseHat
 {
 public:
-    SenesHat();
+    SenseHat();
     int initializeMotionSensor();
     void getSensorData();
 
 private:
-    IMU_EN_SENSOR_TYPE enMotionSensorType;
-    IMU_ST_ANGLES_DATA stAngles;
-    IMU_ST_SENSOR_DATA stGyroRawData;
-    IMU_ST_SENSOR_DATA stAccelRawData;
-    IMU_ST_SENSOR_DATA stMagnRawData;
-    void imuInit(IMU_EN_SENSOR_TYPE *penMotionSensorType);
-    void imuDataGet(IMU_ST_ANGLES_DATA *pstAngles, IMU_ST_SENSOR_DATA *pstGyroRawData, IMU_ST_SENSOR_DATA *pstAccelRawData, IMU_ST_SENSOR_DATA *pstMagnRawData);
+    SensorType motionSensorType;
+    AnglesData angles;
+    SensorData gyroRawData;
+    SensorData accelRawData;
+    SensorData magnRawData;
+    void imuInit(SensorType *motionSensorType);
+    void imuDataGet(AnglesData *angles, SensorData *gyroRawData, SensorData *accelRawData, SensorData *magnRawData);
     void delay(int ms);
 };
 

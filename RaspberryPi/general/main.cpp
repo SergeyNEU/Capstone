@@ -6,7 +6,7 @@ int main()
 {
     int width = 2240;
     int height = 2080;
-    CameraCapture capture(width, height, "camera.jpg");
+    Camera capture(width, height, "camera.jpg");
     capture.captureImage();
 
     GPS parser;
@@ -15,7 +15,7 @@ int main()
     // Close serial port
     close(parser.serialPort);
 
-    SenesHat sh;
+    SenseHat sh;
     int motionSensorType = sh.initializeMotionSensor();
     if (motionSensorType == IMU_EN_SENSOR_TYPE_ICM20948)
     {

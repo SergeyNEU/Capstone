@@ -2,7 +2,7 @@
 
 int main(int argc, char *argv[])
 {
-    SenesHat sh;
+    SenseHat sh;
     int motionSensorType = sh.initializeMotionSensor();
     if (motionSensorType == IMU_EN_SENSOR_TYPE_ICM20948)
     {

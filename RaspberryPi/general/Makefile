@@ -1,24 +1,18 @@
 CXX = g++
-CXXFLAGS = -std=c++11 -Wall -Wextra -pedantic
-LDFLAGS = -lwiringPi -lm -O3
+CXXFLAGS = -std=c++11 -Wall -Wextra -pedantic `pkg-config --cflags opencv4`
+LDFLAGS = -lwiringPi -lm -O3 `pkg-config --libs opencv4`
 
-SRCDIR = .
-OBJDIR = .
+SRCS = main.cpp ../camera/camera.cpp ../gps/gps.cpp ../sensehat/sensehat.cpp
+OBJS = $(SRCS:.cpp=.o)
+EXEC = main
 
-SRC = $(wildcard $(SRCDIR)/*.cpp)
-OBJ = $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(SRC))
+all: $(EXEC)
 
-TARGET = main
+$(EXEC): $(OBJS)
+	$(CXX) $(OBJS) $(LDFLAGS) -o $(EXEC)
 
-all: $(TARGET)
-
-$(TARGET): $(OBJ)
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
-
-$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJDIR)/*.o $(TARGET)
-
-.PHONY: all clean
+	rm -f $(EXEC) $(OBJS)
