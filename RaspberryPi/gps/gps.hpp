@@ -16,12 +16,13 @@ class GPS
 {
 public:
     GPS();
-    void parse();
+    vector<string> parse();
+    void printGGAValues(const vector<string> &ggaValues);
+    bool configureSerialPort();
     int serialPort;
 
 private:
     int openSerialPort(const char *portName);
-    void configureSerialPort(int serialPort);
 };
 
 #endif
