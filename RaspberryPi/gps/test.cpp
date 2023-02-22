@@ -10,6 +10,7 @@ int main()
         vector<string> ggaValues;
         for (int x = 0; x < 100; x++)
         {
+            sleep(1);
             ggaValues = parser.parse();
             if (!ggaValues.empty())
             {
