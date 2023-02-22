@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++11 -Wall -Wextra -pedantic
+CXXFLAGS = -std=c++11 -Wall -Wextra -pedantic -lwiringPi -lm 
 LDFLAGS = -lwiringPi -lm -O3
 
 SRCDIR = .

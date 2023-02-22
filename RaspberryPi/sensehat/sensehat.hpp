@@ -29,17 +29,14 @@ class SenseHat
 public:
     SenseHat();
     int initializeMotionSensor();
-    void getSensorData();
+    void getSensorData(float* sensorData);
 
 private:
-    SensorType motionSensorType;
-    AnglesData angles;
-    SensorData gyroRawData;
-    SensorData accelRawData;
-    SensorData magnRawData;
-    void imuInit(SensorType *motionSensorType);
-    void imuDataGet(AnglesData *angles, SensorData *gyroRawData, SensorData *accelRawData, SensorData *magnRawData);
-    void delay(int ms);
+    IMU_EN_SENSOR_TYPE motionSensorType;
+    IMU_ST_ANGLES_DATA angles;
+    IMU_ST_SENSOR_DATA gyroRawData;
+    IMU_ST_SENSOR_DATA accelRawData;
+    IMU_ST_SENSOR_DATA magnRawData;
 };
 
 #endif
