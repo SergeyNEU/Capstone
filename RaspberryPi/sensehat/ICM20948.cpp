@@ -214,10 +214,10 @@ void icm20948init(void)
   I2C_WriteOneByte( REG_ADD_REG_BANK_SEL, REG_VAL_REG_BANK_2);
   I2C_WriteOneByte( REG_ADD_GYRO_SMPLRT_DIV, 0x07);
   I2C_WriteOneByte( REG_ADD_GYRO_CONFIG_1,   
-                  REG_VAL_BIT_GYRO_DLPCFG_6 | REG_VAL_BIT_GYRO_FS_1000DPS | REG_VAL_BIT_GYRO_DLPF);
+                  REG_VAL_BIT_GYRO_DLPCFG_6 | REG_VAL_BIT_GYRO_FS_2000DPS | REG_VAL_BIT_GYRO_DLPF);
   I2C_WriteOneByte( REG_ADD_ACCEL_SMPLRT_DIV_2,  0x07);
   I2C_WriteOneByte( REG_ADD_ACCEL_CONFIG,
-                  REG_VAL_BIT_ACCEL_DLPCFG_6 | REG_VAL_BIT_ACCEL_FS_2g | REG_VAL_BIT_ACCEL_DLPF);
+                  REG_VAL_BIT_ACCEL_DLPCFG_6 | REG_VAL_BIT_ACCEL_FS_16g | REG_VAL_BIT_ACCEL_DLPF);
 
   /* user bank 0 register */
   I2C_WriteOneByte( REG_ADD_REG_BANK_SEL, REG_VAL_REG_BANK_0); 
@@ -229,7 +229,7 @@ void icm20948init(void)
   icm20948MagCheck();
 
   icm20948WriteSecondary( I2C_ADD_ICM20948_AK09916|I2C_ADD_ICM20948_AK09916_WRITE,
-                               REG_ADD_MAG_CNTL2, REG_VAL_MAG_MODE_20HZ);  
+                               REG_ADD_MAG_CNTL2, REG_VAL_MAG_MODE_100HZ);  
   return;
 }
 
