@@ -23,6 +23,9 @@ public:
 
 private:
     int openSerialPort(const char *portName);
+    double rawVal;
+    int degrees;
+    double minutes;
 };
 
 #endif

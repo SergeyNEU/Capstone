@@ -103,42 +103,74 @@ vector<string> GPS::parse()
 // Function to print out GGA values with correct formatting
 void GPS::printGGAValues(const vector<string> &ggaValues)
 {
-    cout << "GGA Message:" << endl;
-    cout << "  Time (UTC): " << ggaValues[1] << endl;
-    cout << "  Latitude: " << ggaValues[2] << " " << ggaValues[3] << endl;
-    cout << "  Longitude: " << ggaValues[4] << " " << ggaValues[5] << endl;
-    cout << "  Fix Quality: " << ggaValues[6] << " (";
-    switch (stoi(ggaValues[6]))
-    {
-    case 0:
-        cout << "Fix not valid";
-        break;
-    case 1:
-        cout << "GPS fix";
-        break;
-    case 2:
-        cout << "Differential GPS fix (DGNSS), SBAS, OmniSTAR VBS, Beacon, RTX in GVBS mode";
-        break;
-    case 3:
-        cout << "Not applicable";
-        break;
-    case 4:
-        cout << "RTK Fixed, xFill";
-        break;
-    case 5:
-        cout << "RTK Float, OmniSTAR XP/HP, Location RTK, RTX";
-        break;
-    case 6:
-        cout << "INS Dead reckoning";
-        break;
-    default:
-        cout << "Unknown";
+    cout << "Time (UTC): " << ggaValues[1] << " | ";
+
+    if(ggaValues[2] == ""){
+        cout << "Lat: " << 0 << " deg " << 0 << " N/A" << " | ";
+    } else {
+        rawVal = std::stod(ggaValues[2]);
+        degrees = static_cast<int>(rawVal / 100);
+        minutes = rawVal - (degrees * 100);
+
+        cout << "Lat: " << degrees << " deg " << minutes << " " << ggaValues[3] << " | ";
     }
-    cout << ")" << endl;
-    cout << "  Number of Satellites: " << ggaValues[7] << endl;
-    cout << "  Horizontal Dilution of Precision (HDOP): " << ggaValues[8] << endl;
-    cout << "  Altitude: " << ggaValues[9] << " " << ggaValues[10] << endl;
-    cout << "  Geoidal Separation: " << ggaValues[11] << " " << ggaValues[12] << endl;
-    cout << " Age of Differential GPS Data: " << ggaValues[13] << endl;
-    cout << " Differential Reference Station ID: " << ggaValues[14] << endl;
+
+
+
+    if(ggaValues[4] == ""){
+        cout << "Long: " << 0 << " deg " << 0 << " N/A" << " | ";
+    } else {
+        rawVal = std::stod(ggaValues[4]);
+        degrees = static_cast<int>(rawVal / 100);
+        minutes = rawVal - (degrees * 100);
+
+        cout << "Long: " << degrees << " deg " << minutes << " " << ggaValues[5] << " | ";
+    }
+
+    //Fix Quality
+    cout << "F.Q.: " << ggaValues[6] << " | ";
+    
+    // " (";
+    // switch (stoi(ggaValues[6]))
+    // {
+    // case 0:
+    //     cout << "Fix not valid";
+    //     break;
+    // case 1:
+    //     cout << "GPS fix";
+    //     break;
+    // case 2:
+    //     cout << "Differential GPS fix (DGNSS), SBAS, OmniSTAR VBS, Beacon, RTX in GVBS mode";
+    //     break;
+    // case 3:
+    //     cout << "Not applicable";
+    //     break;
+    // case 4:
+    //     cout << "RTK Fixed, xFill";
+    //     break;
+    // case 5:
+    //     cout << "RTK Float, OmniSTAR XP/HP, Location RTK, RTX";
+    //     break;
+    // case 6:
+    //     cout << "INS Dead reckoning";
+    //     break;
+    // default:
+    //     cout << "Unknown";
+    // }
+    // cout << ")" << endl;
+
+    //Number of Satellites
+    cout << "# Sat: " << ggaValues[7] << " | ";
+    //Horizontal Dilution of Precision (
+    cout << "HDOP: " << ggaValues[8] << " | ";
+    cout << "Alt: " << ggaValues[9] << " " << ggaValues[10] << " | ";
+
+    //Geoidal Separation
+    cout << "G.S: " << ggaValues[11] << " " << ggaValues[12] << " | ";
+
+    //Age of Differential GPS Data
+    cout << "Diff Age: " << ggaValues[13] << " | ";
+
+    //Differential Reference Station ID
+    cout << "Ref ID: " << ggaValues[14] << endl;
 }

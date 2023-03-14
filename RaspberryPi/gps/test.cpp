@@ -7,6 +7,7 @@ int main()
 
     if (serialPortConfiguration == true)
     {
+        printf("Configured serial port\n");
         vector<string> ggaValues;
         for (int x = 0; x < 100; x++)
         {
