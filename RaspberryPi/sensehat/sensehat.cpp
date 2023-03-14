@@ -4,7 +4,19 @@ SenseHat::SenseHat() {}
 
 int SenseHat::initializeMotionSensor()
 {
-    imuInit(&motionSensorType);
+    
+    int counter = 0;
+    float sensorData[12];
+    do{
+        imuInit(&motionSensorType);
+        if(motionSensorType != IMU_EN_SENSOR_TYPE_ICM20948){
+            printf("Motion sensor is not responding, retrying...\n");
+            getSensorData(sensorData);
+            usleep(5000);
+        }
+        counter++;
+    } while ((motionSensorType != IMU_EN_SENSOR_TYPE_ICM20948) && (counter < 10));
+
     return motionSensorType;
 }
 

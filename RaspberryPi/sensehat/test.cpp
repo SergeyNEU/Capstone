@@ -8,17 +8,8 @@ int main(int argc, char *argv[])
     SenseHat sh;
     int motionSensorType;
     float sensorData[12];
-    do
-    {
-        motionSensorType = sh.initializeMotionSensor();
-        if (motionSensorType != IMU_EN_SENSOR_TYPE_ICM20948){
-            printf("Motion sensor is not responding, retrying...\n");
-            sh.getSensorData(sensorData);
-        }
-        usleep(5000);
-    } while (motionSensorType != IMU_EN_SENSOR_TYPE_ICM20948);
 
-    if (motionSensorType == IMU_EN_SENSOR_TYPE_ICM20948)
+    if (IMU_EN_SENSOR_TYPE_ICM20948 == sh.initializeMotionSensor())
     {
         printf("Motion sensor is ICM-20948\n");
 
@@ -51,7 +42,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        printf("Motion sensor NULL\n");
+        printf("Motion sensor not responding!\n");
     }
 
     return 0;

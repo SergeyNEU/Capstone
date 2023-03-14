@@ -3,6 +3,9 @@
 
 #include <stdio.h>
 #include "ICM20948.h"
+#include "unistd.h"
+#include "time.h"
+#include <sys/time.h>
 
 typedef enum
 {
