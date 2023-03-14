@@ -134,7 +134,7 @@ def main(_argv):
     images_data = np.asarray(images_data).astype(np.float32)
 
     if FLAGS.framework == 'tflite':
-        interpreter = tf.lite.Interpreter(model_path=FLAGS.weights)
+        interpreter = tf.lite.Interpreter(model_path=FLAGS.weights) # add parameter num_threads = [1,2,3,4] and check how fast they are on the pi
         interpreter.allocate_tensors()
         input_details = interpreter.get_input_details()
         output_details = interpreter.get_output_details()
