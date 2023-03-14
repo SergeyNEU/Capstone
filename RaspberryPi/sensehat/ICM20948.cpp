@@ -236,9 +236,12 @@ void icm20948init(void)
 bool icm20948Check(void)
 {
     bool bRet = false;
+
     if(REG_VAL_WIA == I2C_ReadOneByte( REG_ADD_WIA))
     {
         bRet = true;
+    } else {
+      printf("ERROR: I2C_ReadOneByte(REG_ADD_WIA): %x \n", I2C_ReadOneByte( REG_ADD_WIA));
     }
     return bRet;
 }

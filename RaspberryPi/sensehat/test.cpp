@@ -7,20 +7,28 @@ int main(int argc, char *argv[])
 {
     SenseHat sh;
     int motionSensorType;
-
+    float sensorData[12];
     do
     {
         motionSensorType = sh.initializeMotionSensor();
         if (motionSensorType != IMU_EN_SENSOR_TYPE_ICM20948){
-            printf("Motion sensor is not responding...\n");
+            printf("Motion sensor is not responding, retrying...\n");
+            sh.getSensorData(sensorData);
         }
-        sleep(1);
+        usleep(5000);
     } while (motionSensorType != IMU_EN_SENSOR_TYPE_ICM20948);
 
     if (motionSensorType == IMU_EN_SENSOR_TYPE_ICM20948)
     {
         printf("Motion sensor is ICM-20948\n");
-        float sensorData[12];
+
+        // Let sensors calibrate for 10 samples...
+        for (int x = 0; x < 10; x++)
+        {
+            sh.getSensorData(sensorData);
+            usleep(5000);
+        }
+        
         for (int x = 0; x < 10000; x++)
         {
             sh.getSensorData(sensorData);
@@ -38,7 +46,7 @@ int main(int argc, char *argv[])
             // Magnetic
             printf("MX: %8.1f MY: %8.1f MZ: %8.1f\n", sensorData[9], sensorData[10], sensorData[11]);
 
-            usleep(10000);
+            usleep(5000);
         }
     }
     else
