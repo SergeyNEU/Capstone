@@ -1,6 +1,6 @@
 CXX = g++
-CXXFLAGS = -Wall -O3 `pkg-config --cflags --libs opencv4`
-LDFLAGS = `pkg-config --cflags --libs opencv4`
+CXXFLAGS = -Wall -O3 -std=c++17 
+LDFLAGS = -std=c++17
 SOURCES = test.cpp camera.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 EXECUTABLE = camera

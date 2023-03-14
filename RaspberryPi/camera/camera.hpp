@@ -1,21 +1,17 @@
-#ifndef CAMERA_H
-#define CAMERA_H
+#ifndef CAMERA_HPP
+#define CAMERA_HPP
 
-#include <iostream>
-#include <opencv2/opencv.hpp>
+#include <string>
 
 class Camera {
 public:
-    Camera(int width, int height, const std::string& fileName);
+    Camera(int width, int height, std::string filename);
     int captureImage();
 
 private:
-    void validateDimensions(int width, int height);
-
-    int width_;
-    int height_;
-    std::string fileName_;
-    cv::VideoCapture cap_;
+    int m_width;
+    int m_height;
+    std::string m_filename;
 };
 
-#endif // CAMERA_H
+#endif
