@@ -1,6 +1,6 @@
 #include "gps.hpp"
 
-#define MAX_BUFFER_SIZE 1024
+#define MAX_BUFFER_SIZE 2048
 
 GPS::GPS()
 {
@@ -103,6 +103,12 @@ vector<string> GPS::parse()
 // Function to print out GGA values with correct formatting
 void GPS::printGGAValues(const vector<string> &ggaValues)
 {
+    if (ggaValues.size() < 15)
+    {
+        cout << "Invalid GGA sentence: insufficient data" << endl;
+        return;
+    }
+
     cout << "Time (UTC): " << ggaValues[1] << " | ";
 
     if(ggaValues[2] == ""){
@@ -113,6 +119,7 @@ void GPS::printGGAValues(const vector<string> &ggaValues)
         minutes = static_cast<int>(rawVal - (degrees * 100));
         seconds = (rawVal - (degrees * 100) - minutes) * 60;
 
+        //DMS format, DEGREES MINUTES SECONDS
         cout << "Lat: " << degrees << " deg " << minutes << "' " << seconds << "'' " << ggaValues[3] << " | ";
     }
 
@@ -124,6 +131,7 @@ void GPS::printGGAValues(const vector<string> &ggaValues)
         minutes = static_cast<int>(rawVal - (degrees * 100));
         seconds = (rawVal - (degrees * 100) - minutes) * 60;
 
+        //DMS format, DEGREES MINUTES SECONDS
         cout << "Long: " << degrees << " deg " << minutes << "' " << seconds << "'' " << ggaValues[5] << " | ";
     }
 
@@ -154,12 +162,12 @@ void GPS::printGGAValues(const vector<string> &ggaValues)
     //     cout << "INS Dead reckoning";
     //     break;
     default:
-        cout << ggaValues[6];
+        cout << stoi(ggaValues[6]);
     }
     cout << " | ";
 
     //Number of Satellites
-    cout << "# Sat: " << ggaValues[7] << " | ";
+    cout << "# Sat: " << std::stod(ggaValues[7]) << " | ";
 
     //Horizontal Dilution of Precision (
     cout << "HDOP: " << ggaValues[8] << " | ";
