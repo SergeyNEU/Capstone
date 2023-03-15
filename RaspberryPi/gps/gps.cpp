@@ -29,8 +29,8 @@ bool GPS::configureSerialPort()
 
     struct termios serialConfig;
     memset(&serialConfig, 0, sizeof(serialConfig)); // Set baud rate to 9600
-    cfsetispeed(&serialConfig, B9600);
-    cfsetospeed(&serialConfig, B9600);
+    cfsetispeed(&serialConfig, B4800);
+    cfsetospeed(&serialConfig, B4800);
     // Set character size to 8 bits
     serialConfig.c_cflag &= ~CSIZE;
     serialConfig.c_cflag |= CS8;
@@ -106,39 +106,38 @@ void GPS::printGGAValues(const vector<string> &ggaValues)
     cout << "Time (UTC): " << ggaValues[1] << " | ";
 
     if(ggaValues[2] == ""){
-        cout << "Lat: " << 0 << " deg " << 0 << " N/A" << " | ";
+        cout << "Lat: " << 0 << " deg " << 0 << "' " << 0 << "'' N/A" << " | ";
     } else {
         rawVal = std::stod(ggaValues[2]);
         degrees = static_cast<int>(rawVal / 100);
-        minutes = rawVal - (degrees * 100);
+        minutes = static_cast<int>(rawVal - (degrees * 100));
+        seconds = (rawVal - (degrees * 100) - minutes) * 60;
 
-        cout << "Lat: " << degrees << " deg " << minutes << " " << ggaValues[3] << " | ";
+        cout << "Lat: " << degrees << " deg " << minutes << "' " << seconds << "'' " << ggaValues[3] << " | ";
     }
 
-
-
     if(ggaValues[4] == ""){
-        cout << "Long: " << 0 << " deg " << 0 << " N/A" << " | ";
+        cout << "Long: " << 0 << " deg " << 0 << "' " << 0 << "'' N/A" << " | ";
     } else {
         rawVal = std::stod(ggaValues[4]);
         degrees = static_cast<int>(rawVal / 100);
-        minutes = rawVal - (degrees * 100);
+        minutes = static_cast<int>(rawVal - (degrees * 100));
+        seconds = (rawVal - (degrees * 100) - minutes) * 60;
 
-        cout << "Long: " << degrees << " deg " << minutes << " " << ggaValues[5] << " | ";
+        cout << "Long: " << degrees << " deg " << minutes << "' " << seconds << "'' " << ggaValues[5] << " | ";
     }
 
     //Fix Quality
-    cout << "F.Q.: " << ggaValues[6] << " | ";
+    cout << "Fix: ";
     
-    // " (";
-    // switch (stoi(ggaValues[6]))
-    // {
-    // case 0:
-    //     cout << "Fix not valid";
-    //     break;
-    // case 1:
-    //     cout << "GPS fix";
-    //     break;
+    switch (stoi(ggaValues[6]))
+    {
+    case 0:
+        cout << "Not Valid";
+        break;
+    case 1:
+        cout << "Valid";
+        break;
     // case 2:
     //     cout << "Differential GPS fix (DGNSS), SBAS, OmniSTAR VBS, Beacon, RTX in GVBS mode";
     //     break;
@@ -154,13 +153,14 @@ void GPS::printGGAValues(const vector<string> &ggaValues)
     // case 6:
     //     cout << "INS Dead reckoning";
     //     break;
-    // default:
-    //     cout << "Unknown";
-    // }
-    // cout << ")" << endl;
+    default:
+        cout << ggaValues[6];
+    }
+    cout << " | ";
 
     //Number of Satellites
     cout << "# Sat: " << ggaValues[7] << " | ";
+
     //Horizontal Dilution of Precision (
     cout << "HDOP: " << ggaValues[8] << " | ";
     cout << "Alt: " << ggaValues[9] << " " << ggaValues[10] << " | ";

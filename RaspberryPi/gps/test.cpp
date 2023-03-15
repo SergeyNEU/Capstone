@@ -7,7 +7,7 @@ int main()
 
     if (serialPortConfiguration == true)
     {
-        printf("Configured serial port\n");
+        printf("Configured serial port (/dev/ttyUSB0).\n");
         vector<string> ggaValues;
         for (int x = 0; x < 100; x++)
         {
@@ -16,12 +16,15 @@ int main()
             if (!ggaValues.empty())
             {
                 parser.printGGAValues(ggaValues);
+            } else {
+                printf("No serial port output.\n");
+                break;
             }
         }
     }
     else
     {
-        printf("Unable to configure serial port\n");
+        printf("Unable to configure serial port (/dev/ttyUSB0).\n");
     }
 
     // Close serial port
