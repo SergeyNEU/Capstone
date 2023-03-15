@@ -4,7 +4,6 @@
 
 GPS::GPS()
 {
-
 }
 
 // Function to open serial port
@@ -23,7 +22,8 @@ bool GPS::configureSerialPort()
 {
     int internal_serialPort = openSerialPort("/dev/ttyUSB0");
 
-    if (internal_serialPort == -1){
+    if (internal_serialPort == -1)
+    {
         return false;
     }
 
@@ -111,33 +111,41 @@ void GPS::printGGAValues(const vector<string> &ggaValues)
 
     cout << "Time (UTC): " << ggaValues[1] << " | ";
 
-    if(ggaValues[2] == ""){
-        cout << "Lat: " << 0 << " deg " << 0 << "' " << 0 << "'' N/A" << " | ";
-    } else {
+    if (ggaValues[2] == "")
+    {
+        cout << "Lat: " << 0 << " deg " << 0 << "' " << 0 << "'' N/A"
+             << " | ";
+    }
+    else
+    {
         rawVal = std::stod(ggaValues[2]);
         degrees = static_cast<int>(rawVal / 100);
         minutes = static_cast<int>(rawVal - (degrees * 100));
         seconds = (rawVal - (degrees * 100) - minutes) * 60;
 
-        //DMS format, DEGREES MINUTES SECONDS
+        // DMS format, DEGREES MINUTES SECONDS
         cout << "Lat: " << degrees << " deg " << minutes << "' " << seconds << "'' " << ggaValues[3] << " | ";
     }
 
-    if(ggaValues[4] == ""){
-        cout << "Long: " << 0 << " deg " << 0 << "' " << 0 << "'' N/A" << " | ";
-    } else {
+    if (ggaValues[4] == "")
+    {
+        cout << "Long: " << 0 << " deg " << 0 << "' " << 0 << "'' N/A"
+             << " | ";
+    }
+    else
+    {
         rawVal = std::stod(ggaValues[4]);
         degrees = static_cast<int>(rawVal / 100);
         minutes = static_cast<int>(rawVal - (degrees * 100));
         seconds = (rawVal - (degrees * 100) - minutes) * 60;
 
-        //DMS format, DEGREES MINUTES SECONDS
+        // DMS format, DEGREES MINUTES SECONDS
         cout << "Long: " << degrees << " deg " << minutes << "' " << seconds << "'' " << ggaValues[5] << " | ";
     }
 
-    //Fix Quality
+    // Fix Quality
     cout << "Fix: ";
-    
+
     switch (stoi(ggaValues[6]))
     {
     case 0:
@@ -166,19 +174,19 @@ void GPS::printGGAValues(const vector<string> &ggaValues)
     }
     cout << " | ";
 
-    //Number of Satellites
+    // Number of Satellites
     cout << "# Sat: " << std::stod(ggaValues[7]) << " | ";
 
-    //Horizontal Dilution of Precision (
+    // Horizontal Dilution of Precision (
     cout << "HDOP: " << ggaValues[8] << " | ";
     cout << "Alt: " << ggaValues[9] << " " << ggaValues[10] << " | ";
 
-    //Geoidal Separation
+    // Geoidal Separation
     cout << "G.S: " << ggaValues[11] << " " << ggaValues[12] << " | ";
 
-    //Age of Differential GPS Data
+    // Age of Differential GPS Data
     cout << "Diff Age: " << ggaValues[13] << " | ";
 
-    //Differential Reference Station ID
+    // Differential Reference Station ID
     cout << "Ref ID: " << ggaValues[14] << endl;
 }

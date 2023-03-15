@@ -1,6 +1,7 @@
 #include "camera.hpp"
 
-int main() {
+int main()
+{
     int width = 4608;
     int height = 2592;
     std::string filename = "./image.jpg";

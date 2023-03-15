@@ -4,12 +4,14 @@ SenseHat::SenseHat() {}
 
 int SenseHat::initializeMotionSensor()
 {
-    
+
     int counter = 0;
     float sensorData[12];
-    do{
+    do
+    {
         imuInit(&motionSensorType);
-        if(motionSensorType != IMU_EN_SENSOR_TYPE_ICM20948){
+        if (motionSensorType != IMU_EN_SENSOR_TYPE_ICM20948)
+        {
             printf("Motion sensor is not responding, retrying...\n");
             getSensorData(sensorData);
             usleep(5000);
@@ -27,18 +29,18 @@ void SenseHat::getSensorData(float *sensorData)
     sensorData[1] = angles.fPitch;
     sensorData[2] = angles.fYaw;
 
-    /*  The unit of acceleration measured by the demo is LSB (least significant bit), 
-        and the unit is often converted to gravitational acceleration (g) in actual use. 
-        The sample demo of the module sets AFS_SEL=0 by default, and the corresponding range 
+    /*  The unit of acceleration measured by the demo is LSB (least significant bit),
+        and the unit is often converted to gravitational acceleration (g) in actual use.
+        The sample demo of the module sets AFS_SEL=0 by default, and the corresponding range
         is 16384 LSB/g (±2g), so the actual acceleration measured is: */
 
     sensorData[3] = accelRawData.s16X;
     sensorData[4] = accelRawData.s16Y;
-    sensorData[5] = accelRawData.s16Z; 
+    sensorData[5] = accelRawData.s16Z;
 
     /*  The unit of angular velocity measured by the program is LSB (least significant bit).
-        In practice, the unit is often converted to angular velocity (°/sec). The sample program 
-        of the module sets FS_SEL=2 by default, and the corresponding range is 32.8 LSB/(°/s) (±1000°/s), 
+        In practice, the unit is often converted to angular velocity (°/sec). The sample program
+        of the module sets FS_SEL=2 by default, and the corresponding range is 32.8 LSB/(°/s) (±1000°/s),
         so the actual angular velocity measured is
     */
 

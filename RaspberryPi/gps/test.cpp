@@ -16,7 +16,9 @@ int main()
             if (!ggaValues.empty())
             {
                 parser.printGGAValues(ggaValues);
-            } else {
+            }
+            else
+            {
                 printf("No serial port output.\n");
             }
         }

@@ -3,7 +3,8 @@
 
 #include <string>
 
-class Camera {
+class Camera
+{
 public:
     Camera(int width, int height, std::string filename);
     int captureImage();

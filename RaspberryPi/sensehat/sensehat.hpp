@@ -32,7 +32,7 @@ class SenseHat
 public:
     SenseHat();
     int initializeMotionSensor();
-    void getSensorData(float* sensorData);
+    void getSensorData(float *sensorData);
 
 private:
     IMU_EN_SENSOR_TYPE motionSensorType;
