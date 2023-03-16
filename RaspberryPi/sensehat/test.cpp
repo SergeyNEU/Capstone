@@ -1,71 +1,106 @@
 #include "sensehat.hpp"
 #include "unistd.h"
-#include "time.h"
-#include <sys/time.h>
-#include <fstream>
-#include <sstream>
-#include <iomanip>
+#include <iostream>
+#include <deque>
+#include <numeric>
+
+enum class MovementState
+{
+    Idle,
+    MovedDown,
+    Cooldown
+};
+
+float movingAverage(std::deque<float> &zValues, float currentZ, int windowSize)
+{
+    if (zValues.size() >= windowSize)
+    {
+        zValues.pop_front();
+    }
+    zValues.push_back(currentZ);
+
+    return std::accumulate(zValues.begin(), zValues.end(), 0.0) / zValues.size();
+}
+
+bool detectPothole(float originalZ, float currentZ, float movementThreshold, float returnThreshold, MovementState &state, int &counter, int timeLimitSamples, int &cooldownCounter, int cooldownSamples)
+{
+    if (state == MovementState::Idle && (originalZ - currentZ) > movementThreshold)
+    {
+        state = MovementState::MovedDown;
+        counter = 0;
+    }
+    else if (state == MovementState::MovedDown)
+    {
+        counter++;
+        if (abs(originalZ - currentZ) <= returnThreshold)
+        {
+            state = MovementState::Cooldown;
+            cooldownCounter = 0;
+            return true;
+        }
+        else if (counter >= timeLimitSamples)
+        {
+            state = MovementState::Idle;
+        }
+    }
+    else if (state == MovementState::Cooldown)
+    {
+        cooldownCounter++;
+        if (cooldownCounter >= cooldownSamples)
+        {
+            state = MovementState::Idle;
+        }
+    }
+
+    return false;
+}
 
 int main(int argc, char *argv[])
 {
     SenseHat sh;
-    int motionSensorType;
     float sensorData[12];
 
     if (IMU_EN_SENSOR_TYPE_ICM20948 == sh.initializeMotionSensor())
     {
         printf("Motion sensor is ICM-20948\n");
 
-        // Let sensors calibrate for 10 samples...
+        // Calibrate for 10 samples
         for (int x = 0; x < 10; x++)
         {
             sh.getSensorData(sensorData);
             usleep(5000);
         }
 
-        // Create unique CSV file name
-        time_t rawtime;
-        time(&rawtime);
-        struct tm *timeinfo = localtime(&rawtime);
-        char buffer[80];
-        strftime(buffer, sizeof(buffer), "sensor_data_%Y%m%d_%H%M%S.csv", timeinfo);
-        std::string fileName(buffer);
+        std::deque<float> zValues;
+        int windowSize = 7;                // Adjust this value to change the moving average window size
+        float movementThreshold = 300.0; // Adjust this value for sensitivity
+        float returnThreshold = 200.0;    // Adjust this value for sensitivity
+        int timeLimitSamples = 15;      // Adjust this value to change the time limit for returning to the original position
+        int cooldownSamples = 20;       // Adjust this value to change the cooldown period
 
-        std::ofstream outFile(fileName);
-        outFile << "Time, Roll, Pitch, Yaw, AX, AY, AZ, GX, GY, GZ, MX, MY, MZ\n";
+        MovementState state = MovementState::Idle;
+        int counter = 0;
+        int cooldownCounter = 0;
 
         for (int x = 0; x < 10000; x++)
         {
             sh.getSensorData(sensorData);
+            float currentZ = sensorData[4];
 
-            struct timeval tv;
-            gettimeofday(&tv, NULL);
-            struct tm *timeinfo = gmtime(&tv.tv_sec);
+            // Calculate the moving average of Z acceleration values
+            float avgZ = movingAverage(zValues, currentZ, windowSize);
 
-            printf("%02d:%02d.%03d | ", timeinfo->tm_min, timeinfo->tm_sec, (int)(tv.tv_usec / 1000));
-            printf("Roll: %8.1f Pitch: %8.1f Yaw: %8.1f | ", sensorData[0], sensorData[1], sensorData[2]);
-            // Acceleration
-            printf("AX: %8.1f AY: %8.1f AZ: %8.1f | ", sensorData[3], sensorData[4], sensorData[5]);
-            // Gyroscope
-            printf("GX: %8.1f GY: %8.1f GZ: %8.1f | ", sensorData[6], sensorData[7], sensorData[8]);
-            // Magnetic
-            printf("MX: %8.1f MY: %8.1f MZ: %8.1f\n", sensorData[9], sensorData[10], sensorData[11]);
-
-            outFile << timeinfo->tm_min << ":" << timeinfo->tm_sec << "." << (int)(tv.tv_usec / 1000) << ", ";
-            outFile << sensorData[0] << ", " << sensorData[1] << ", " << sensorData[2] << ", ";
-            outFile << sensorData[3] << ", " << sensorData[4] << ", " << sensorData[5] << ", ";
-            outFile << sensorData[6] << ", " << sensorData[7] << ", " << sensorData[8] << ", ";
-            outFile << sensorData[9] << ", " << sensorData[10] << ", " << sensorData[11] << "\n";
+            if (zValues.size() >= windowSize && detectPothole(avgZ, currentZ, movementThreshold, returnThreshold, state, counter, timeLimitSamples, cooldownCounter, cooldownSamples))
+            {
+                printf("Raspberry Pi has detected a pothole.\n");
+            }
 
             usleep(5000);
         }
-
-        outFile.close();
     }
     else
     {
         printf("Motion sensor not responding!\n");
     }
-
     return 0;
 }
