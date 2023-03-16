@@ -12,8 +12,8 @@
 // Camera functions
 void captureImage(const std::string &filename)
 {
-    int width = 4608;
-    int height = 2592;
+    int width = 1920;
+    int height = 1080;
 
     Camera camera(width, height, filename);
     camera.captureImage();
@@ -96,7 +96,9 @@ int main(int argc, char *argv[])
 
             if (values.size() >= windowSize && sh.detectPothole(avgValue, currentValue, &avgValue_beforePothole, movementThreshold, returnThreshold, state, counter, timeLimitSamples, cooldownCounter, cooldownSamples))
             {
-                printf("Raspberry Pi has detected a pothole.\n");
+                printf("Raspberry Pi has detected a pothole. Taking an image...\n");
+
+                usleep(5000);
 
                 // Capture image
                 std::string filename = "./image_" + std::to_string(x) + ".jpg";
@@ -108,7 +110,7 @@ int main(int argc, char *argv[])
                 {
                     printGPSData(ggaValues);
                 }
-                usleep(1000);
+                
             }
         }
     }

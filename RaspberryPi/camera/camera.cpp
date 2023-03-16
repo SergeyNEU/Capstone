@@ -9,7 +9,7 @@ Camera::Camera(int width, int height, std::string filename)
 int Camera::captureImage()
 {
     // Generate the command string
-    std::string command = "libcamera-still --immediate -n -t1 --width " + std::to_string(m_width) + " --height " + std::to_string(m_height) + " -o " + m_filename;
+    std::string command = "libcamera-still --immediate -n -t1 --width " + std::to_string(m_width) + " --height " + std::to_string(m_height) + " -o " + m_filename + " >/dev/null 2>&1";
 
     // Execute the command and wait for it to complete
     int status = std::system(command.c_str());

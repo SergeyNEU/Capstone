@@ -29,8 +29,8 @@ bool GPS::configureSerialPort()
 
     struct termios serialConfig;
     memset(&serialConfig, 0, sizeof(serialConfig)); // Set baud rate to 9600
-    cfsetispeed(&serialConfig, B4800);
-    cfsetospeed(&serialConfig, B4800);
+    cfsetispeed(&serialConfig, B9600);
+    cfsetospeed(&serialConfig, B9600);
     // Set character size to 8 bits
     serialConfig.c_cflag &= ~CSIZE;
     serialConfig.c_cflag |= CS8;
