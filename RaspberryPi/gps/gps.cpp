@@ -67,7 +67,7 @@ vector<string> GPS::parse()
     if (bytesRead == -1)
     {
         perror("Error: Unable to read from serial port");
-        exit(EXIT_FAILURE);
+        return {};
     }
 
     // Parse NMEA message

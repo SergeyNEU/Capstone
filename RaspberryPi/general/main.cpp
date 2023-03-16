@@ -7,13 +7,7 @@
 #include <numeric>
 #include <vector>
 #include <string>
-
-enum class MovementState
-{
-    Idle,
-    MovedDown,
-    Cooldown
-};
+#include <cstdio>
 
 // Camera functions
 void captureImage(const std::string &filename)
@@ -58,56 +52,6 @@ void printGPSData(const std::vector<std::string> &ggaValues)
     parser.printGGAValues(ggaValues);
 }
 
-// Moving average function
-float movingAverage(std::deque<float> &values, float currentValue, int windowSize, MovementState state)
-{
-    if (state == MovementState::Idle)
-    {
-        if (values.size() >= windowSize)
-        {
-            values.pop_front();
-        }
-        values.push_back(currentValue);
-    }
-
-    return std::accumulate(values.begin(), values.end(), 0.0) / values.size();
-}
-
-// Pothole detection function
-bool detectPothole(float originalValue, float currentValue, float *avgValue_beforePothole, float movementThreshold, float returnThreshold, MovementState &state, int &counter, int timeLimitSamples, int &cooldownCounter, int cooldownSamples)
-{
-    if (state == MovementState::Idle && (originalValue - currentValue) > movementThreshold)
-    {
-        state = MovementState::MovedDown;
-        counter = 0;
-        *avgValue_beforePothole = originalValue;
-    }
-    else if (state == MovementState::MovedDown)
-    {
-        counter++;
-        if (*avgValue_beforePothole - currentValue <= returnThreshold)
-        {
-            state = MovementState::Cooldown;
-            cooldownCounter = 0;
-            return true;
-        }
-        else if (counter >= timeLimitSamples)
-        {
-            state = MovementState::Idle;
-        }
-    }
-    else if (state == MovementState::Cooldown)
-    {
-        cooldownCounter++;
-        if (cooldownCounter >= cooldownSamples)
-        {
-            state = MovementState::Idle;
-        }
-    }
-
-    return false;
-}
-
 int main(int argc, char *argv[])
 {
     SenseHat sh;
@@ -121,7 +65,6 @@ int main(int argc, char *argv[])
     {
         printf("Motion sensor is ICM-20948\n");
 
-        // Calibrate for 10 samples
         for (int x = 0; x < 10; x++)
         {
             sh.getSensorData(sensorData);
@@ -129,27 +72,29 @@ int main(int argc, char *argv[])
         }
 
         std::deque<float> values;
-        int windowSize = 7; // Adjust this value to change the moving average window size
-        float movementThreshold =
-            300.0;                     // Adjust this value for sensitivity
-        float returnThreshold = 200.0; // Adjust this value for sensitivity
-        int timeLimitSamples = 15;     // Adjust this value to change the time limit for returning to the original position
-        int cooldownSamples = 20;      // Adjust this value to change the cooldown period
+        int windowSize = 10;
+        float movementThreshold = 150.0;
+        float returnThreshold = 15.0;
+        int timeLimitSamples = 40;
+        int cooldownSamples = 15;
 
         MovementState state = MovementState::Idle;
         int counter = 0;
         int cooldownCounter = 0;
         float avgValue_beforePothole = 0;
+        float avgValue = 0;
 
         for (int x = 0; x < 10000; x++)
         {
             sh.getSensorData(sensorData);
             float currentValue = sensorData[4];
 
-            // Calculate the moving average of values
-            float avgValue = movingAverage(values, currentValue, windowSize, state);
+            if (state == MovementState::Idle)
+            {
+                avgValue = sh.movingAverage(values, currentValue, windowSize);
+            }
 
-            if (values.size() >= windowSize && detectPothole(avgValue, currentValue, &avgValue_beforePothole, movementThreshold, returnThreshold, state, counter, timeLimitSamples, cooldownCounter, cooldownSamples))
+            if (values.size() >= windowSize && sh.detectPothole(avgValue, currentValue, &avgValue_beforePothole, movementThreshold, returnThreshold, state, counter, timeLimitSamples, cooldownCounter, cooldownSamples))
             {
                 printf("Raspberry Pi has detected a pothole.\n");
 
@@ -163,17 +108,13 @@ int main(int argc, char *argv[])
                 {
                     printGPSData(ggaValues);
                 }
+                usleep(1000);
             }
-
-            usleep(5000);
         }
     }
     else
     {
         printf("Motion sensor not responding!\n");
     }
-
-    // Close serial port
-    close(parser.serialPort);
     return 0;
 }

@@ -1,11 +1,13 @@
-#ifndef SENESHAT_H
-#define SENESHAT_H
+#ifndef SENSEHAT_H
+#define SENSEHAT_H
 
 #include <stdio.h>
 #include "ICM20948.h"
 #include "unistd.h"
 #include "time.h"
 #include <sys/time.h>
+#include <deque>
+#include <numeric>
 
 typedef enum
 {
@@ -27,12 +29,21 @@ typedef struct
     int16_t z;
 } SensorData;
 
+enum class MovementState
+{
+    Idle,
+    MovedDown,
+    Cooldown
+};
+
 class SenseHat
 {
 public:
     SenseHat();
     int initializeMotionSensor();
     void getSensorData(float *sensorData);
+    float movingAverage(std::deque<float> &values, float currentValue, int windowSize);
+    bool detectPothole(float originalValue, float currentValue, float *avgValue_beforePothole, float movementThreshold, float returnThreshold, MovementState &state, int &counter, int timeLimitSamples, int &cooldownCounter, int cooldownSamples);
 
 private:
     IMU_EN_SENSOR_TYPE motionSensorType;
