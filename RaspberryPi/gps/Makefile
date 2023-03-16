@@ -1,6 +1,6 @@
 CXX = g++
 CXXFLAGS = -Wall -O3
-LDFLAGS = 
+LDFLAGS = -O3
 SOURCES = test.cpp gps.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 EXECUTABLE = gps

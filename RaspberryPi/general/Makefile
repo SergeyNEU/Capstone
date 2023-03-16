@@ -1,6 +1,6 @@
 CXX = g++
-CXXFLAGS = -std=c++11 -Wall -Wextra -pedantic `pkg-config --cflags opencv4`
-LDFLAGS = -lwiringPi -lm -O3 `pkg-config --libs opencv4`
+CXXFLAGS = -std=c++11 -Wall -Wextra -pedantic -lwiringPi -lm -O3
+LDFLAGS = -std=c++11 -Wall -Wextra -pedantic -lwiringPi -lm -O3
 
 SRCS = main.cpp ../camera/camera.cpp ../gps/gps.cpp ../sensehat/sensehat.cpp
 OBJS = $(SRCS:.cpp=.o)

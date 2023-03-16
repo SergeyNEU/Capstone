@@ -11,28 +11,29 @@ enum class MovementState
     Cooldown
 };
 
-float movingAverage(std::deque<float> &zValues, float currentZ, int windowSize)
+float movingAverage(std::deque<float> &values, float currentValue, int windowSize)
 {
-    if (zValues.size() >= windowSize)
+    if (values.size() >= windowSize)
     {
-        zValues.pop_front();
+        values.pop_front();
     }
-    zValues.push_back(currentZ);
+    values.push_back(currentValue);
 
-    return std::accumulate(zValues.begin(), zValues.end(), 0.0) / zValues.size();
+    return std::accumulate(values.begin(), values.end(), 0.0) / values.size();
 }
 
-bool detectPothole(float originalZ, float currentZ, float movementThreshold, float returnThreshold, MovementState &state, int &counter, int timeLimitSamples, int &cooldownCounter, int cooldownSamples)
+bool detectPothole(float originalValue, float currentValue, float *avgValue_beforePothole, float movementThreshold, float returnThreshold, MovementState &state, int &counter, int timeLimitSamples, int &cooldownCounter, int cooldownSamples)
 {
-    if (state == MovementState::Idle && (originalZ - currentZ) > movementThreshold)
+    if (state == MovementState::Idle && (originalValue - currentValue) > movementThreshold)
     {
         state = MovementState::MovedDown;
         counter = 0;
+        *avgValue_beforePothole = originalValue;
     }
     else if (state == MovementState::MovedDown)
     {
         counter++;
-        if (abs(originalZ - currentZ) <= returnThreshold)
+        if (*avgValue_beforePothole - currentValue <= returnThreshold)
         {
             state = MovementState::Cooldown;
             cooldownCounter = 0;
@@ -71,36 +72,40 @@ int main(int argc, char *argv[])
             usleep(5000);
         }
 
-        std::deque<float> zValues;
-        int windowSize = 7;                // Adjust this value to change the moving average window size
+        std::deque<float> values;
+        int windowSize = 7;              // Adjust this value to change the moving average window size
         float movementThreshold = 300.0; // Adjust this value for sensitivity
-        float returnThreshold = 200.0;    // Adjust this value for sensitivity
-        int timeLimitSamples = 15;      // Adjust this value to change the time limit for returning to the original position
-        int cooldownSamples = 20;       // Adjust this value to change the cooldown period
+        float returnThreshold = 200.0;   // Adjust this value for sensitivity
+        int timeLimitSamples = 15;       // Adjust this value to change the time limit for returning to the original position
+        int cooldownSamples = 20;        // Adjust this value to change the cooldown period
 
         MovementState state = MovementState::Idle;
         int counter = 0;
         int cooldownCounter = 0;
+        float avgValue_beforePothole = 0;
+        float avgValue = 0;
 
         for (int x = 0; x < 10000; x++)
         {
             sh.getSensorData(sensorData);
-            float currentZ = sensorData[4];
+            float currentValue = sensorData[4];
 
-            // Calculate the moving average of Z acceleration values
-            float avgZ = movingAverage(zValues, currentZ, windowSize);
-
-            if (zValues.size() >= windowSize && detectPothole(avgZ, currentZ, movementThreshold, returnThreshold, state, counter, timeLimitSamples, cooldownCounter, cooldownSamples))
+            if (state == MovementState::Idle)
             {
-                printf("Raspberry Pi has detected a pothole.\n");
+                // Calculate the moving average of values
+                avgValue = movingAverage(values, currentValue, windowSize);
             }
 
-            usleep(5000);
+            if (values.size() >= windowSize && detectPothole(avgValue, currentValue, &avgValue_beforePothole, movementThreshold, returnThreshold, state, counter, timeLimitSamples, cooldownCounter, cooldownSamples))
+            {
+                printf("Raspberry Pi has detected a pothole.\n");
+
+                usleep(5000);
+            }
         }
+        else
+        {
+            printf("Motion sensor not responding!\n");
+        }
+        return 0;
     }
-    else
-    {
-        printf("Motion sensor not responding!\n");
-    }
-    return 0;
-}
