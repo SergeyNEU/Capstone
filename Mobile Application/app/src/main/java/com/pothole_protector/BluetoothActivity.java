@@ -45,12 +45,12 @@ public class BluetoothActivity extends AppCompatActivity {
                     piName = deviceName;
                     String deviceHardwareAddress = device.getAddress();
                     piMacAddr = deviceHardwareAddress;
-                    receiveData(device, bluetoothAdapter);
                     return;
 
                 }
             }
         }
+        receiveData(bluetoothAdapter);
 
     }
     // Create a BroadcastReceiver for ACTION_FOUND.
@@ -73,8 +73,9 @@ public class BluetoothActivity extends AppCompatActivity {
             registerReceiver(receiver, filter);
         }
 
-    private void receiveData(BluetoothDevice device, BluetoothAdapter adapter){
+    private void receiveData(BluetoothAdapter adapter){
         AcceptThread thePi = new AcceptThread(adapter);
+        thePi.run();
 
 
 
