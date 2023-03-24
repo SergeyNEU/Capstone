@@ -3,15 +3,15 @@ package com.pothole_protector;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import androidx.room.Room;
 
-import android.app.FragmentTransaction;
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
 import com.pothole_protector.database.AppDatabase;
+import io.reactivex.schedulers.Schedulers;
 
 public class LoginActivity extends AppCompatActivity {
     EditText username;
@@ -46,17 +46,24 @@ public class LoginActivity extends AppCompatActivity {
     private void logInUser() {
         String usernameText = username.getText().toString();
         String passwordText = password.getText().toString();
+
+
         // check database for a matching username and password
+        db.userDao().getUser(usernameText).subscribeOn(Schedulers.newThread()).subscribe(fetchedUser -> {
+            if(!fetchedUser.password.equals(passwordText)){
+                // throw up a dialog saying saying wrong password and shit
+                return;
+            }
+            launchBluetoothActivity();
+        });
 
 
+    }
 
-
-        // if not found, throw up a dialog
-
-
-
-
-        // else launch the next activityq
+    private void launchBluetoothActivity() {
+        Intent myIntent = new Intent(LoginActivity.this, BluetoothActivity.class);
+        myIntent.putExtra("user", username.getText().toString()); //Optional parameters
+        LoginActivity.this.startActivity(myIntent);
     }
 
     private void addUser() {

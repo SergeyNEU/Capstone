@@ -5,6 +5,8 @@ import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
 
+import io.reactivex.Single;
+
 
 @Dao
 public interface UserDao {
@@ -16,6 +18,6 @@ public interface UserDao {
     void deleteUser(User user);
 
     @Query("SELECT * FROM user where username = :username")
-    User getUser(String username);
+    Single<User> getUser(String username);
 
 }

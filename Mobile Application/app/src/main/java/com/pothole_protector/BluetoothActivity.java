@@ -1,24 +1,26 @@
 package com.pothole_protector;
 
+import android.annotation.SuppressLint;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
-
-import com.google.android.material.snackbar.Snackbar;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.view.View;
 import android.widget.Button;
 
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
-import androidx.navigation.ui.AppBarConfiguration;
-import androidx.navigation.ui.NavigationUI;
-
-import com.pothole_protector.databinding.ActivityBluetoothBinding;
+import java.util.Set;
 
 public class BluetoothActivity extends AppCompatActivity {
 
     Button blueButt;
+    String piName;
+    String piMacAddr;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,12 +28,66 @@ public class BluetoothActivity extends AppCompatActivity {
         setContentView(R.layout.activity_bluetooth);
 
         blueButt = findViewById(R.id.connect);
-        blueButt.setOnClickListener(l -> {connectToRaspberry();});
+        blueButt.setOnClickListener(l -> {raspberry();});
+
+        BluetoothManager bluetoothManager = getSystemService(BluetoothManager.class);
+        BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
+        if (bluetoothAdapter == null) {
+            // Device doesn't support Bluetooth
+        }
+
+        @SuppressLint("MissingPermission") Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
+        if (pairedDevices.size() > 0) {
+            // There are paired devices. Get the name and address of each paired device.
+            for (BluetoothDevice device : pairedDevices) {
+                @SuppressLint("MissingPermission") String deviceName = device.getName();
+                if(deviceName.equals("rasperrypi")){
+                    piName = deviceName;
+                    String deviceHardwareAddress = device.getAddress();
+                    piMacAddr = deviceHardwareAddress;
+                    receiveData(device, bluetoothAdapter);
+                    return;
+
+                }
+            }
+        }
+
+    }
+    // Create a BroadcastReceiver for ACTION_FOUND.
+    private final BroadcastReceiver receiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+                // Discovery has found a device. Get the BluetoothDevice
+                // object and its info from the Intent.
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                @SuppressLint("MissingPermission") String deviceName = device.getName();
+                String deviceHardwareAddress = device.getAddress(); // MAC address
+            }
+        }
+    };
+
+    private void raspberry() {
+            // Register for broadcasts when a device is discovered.
+            IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+            registerReceiver(receiver, filter);
+        }
+
+    private void receiveData(BluetoothDevice device, BluetoothAdapter adapter){
+        AcceptThread thePi = new AcceptThread(adapter);
+
+
+
 
 
     }
 
-    private void connectToRaspberry() {
-    }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        // Don't forget to unregister the ACTION_FOUND receiver.
+        unregisterReceiver(receiver);
+    }
 }
