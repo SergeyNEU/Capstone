@@ -22,6 +22,8 @@ public class BluetoothActivity extends AppCompatActivity {
     String piName;
     String piMacAddr;
 
+    private static Context mContext;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -29,6 +31,7 @@ public class BluetoothActivity extends AppCompatActivity {
 
         blueButt = findViewById(R.id.connect);
         blueButt.setOnClickListener(l -> {raspberry();});
+        setContext(this);
 
         BluetoothManager bluetoothManager = getSystemService(BluetoothManager.class);
         BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
@@ -81,6 +84,13 @@ public class BluetoothActivity extends AppCompatActivity {
 
 
 
+    }
+    public static Context getContext() {
+        return mContext;
+    }
+
+    public static void setContext(Context context) {
+        mContext = context;
     }
 
 

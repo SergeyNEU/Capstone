@@ -3,9 +3,11 @@ package com.pothole_protector;
 import static android.content.ContentValues.TAG;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
+import android.content.DialogInterface;
 import android.util.Log;
 
 import java.io.IOException;
@@ -44,7 +46,7 @@ public class AcceptThread extends Thread {
             if (socket != null) {
                 // A connection was accepted. Perform work associated with
                 // the connection in a separate thread.
-                boolean apple = true;
+                showAlert();
                 try {
                     mmServerSocket.close();
                 } catch (IOException e) {
@@ -53,6 +55,26 @@ public class AcceptThread extends Thread {
                 break;
             }
         }
+    }
+
+    private void showAlert() {
+        AlertDialog.Builder alertbox = new AlertDialog.Builder(BluetoothActivity.getContext());
+
+        alertbox.setTitle("Do you want To exit ?");
+        alertbox.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface arg0, int arg1) {
+                // finish used for destroyed activity
+            }
+        });
+
+        alertbox.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface arg0, int arg1) {
+                // Nothing will be happened when clicked on no button
+                // of Dialog
+            }
+        });
+
+        alertbox.show();
     }
 
     // Closes the connect socket and causes the thread to finish.
