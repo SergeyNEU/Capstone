@@ -31,7 +31,6 @@ public class BluetoothActivity extends AppCompatActivity {
 
         blueButt = findViewById(R.id.connect);
         blueButt.setOnClickListener(l -> {raspberry();});
-        setContext(this);
 
         BluetoothManager bluetoothManager = getSystemService(BluetoothManager.class);
         BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
@@ -44,16 +43,15 @@ public class BluetoothActivity extends AppCompatActivity {
             // There are paired devices. Get the name and address of each paired device.
             for (BluetoothDevice device : pairedDevices) {
                 @SuppressLint("MissingPermission") String deviceName = device.getName();
-                if(deviceName.equals("rasperrypi")){
+                if(deviceName.equals("raspberrypi")){
                     piName = deviceName;
                     String deviceHardwareAddress = device.getAddress();
                     piMacAddr = deviceHardwareAddress;
-                    return;
+                    receiveData(bluetoothAdapter);
 
                 }
             }
         }
-        receiveData(bluetoothAdapter);
 
     }
     // Create a BroadcastReceiver for ACTION_FOUND.
@@ -78,7 +76,7 @@ public class BluetoothActivity extends AppCompatActivity {
 
     private void receiveData(BluetoothAdapter adapter){
         AcceptThread thePi = new AcceptThread(adapter);
-        thePi.run();
+        thePi.start();
 
 
 
