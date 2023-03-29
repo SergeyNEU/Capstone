@@ -1,7 +1,7 @@
 CXX = g++
 CXXFLAGS = -Wall -O3 -lbluetooth
 LDFLAGS = -O3 -lbluetooth
-SOURCES = test.cpp bluetooth.cpp
+SOURCES = test.cpp raspberry_bluetooth.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 EXECUTABLE = bluetooth
 

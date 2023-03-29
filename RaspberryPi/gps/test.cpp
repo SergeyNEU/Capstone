@@ -15,7 +15,7 @@ int main()
             ggaValues = parser.parse();
             if (!ggaValues.empty())
             {
-                parser.printGGAValues(ggaValues);
+                parser.printGGAValues(parser.processGGAValues(ggaValues));
             }
             else
             {

@@ -100,93 +100,125 @@ vector<string> GPS::parse()
     return {}; // empty vector if no GGA message found
 }
 
-// Function to print out GGA values with correct formatting
-void GPS::printGGAValues(const vector<string> &ggaValues)
+// Add the helper function implementations
+void GPS::processCoordinate(const string &value, const string &direction, vector<string> &processedData)
 {
-    if (ggaValues.size() < 15)
+    rawVal = std::stod(value);
+    degrees = static_cast<int>(rawVal / 100);
+    minutes = static_cast<int>(rawVal - (degrees * 100));
+    seconds = (rawVal - (degrees * 100) - minutes) * 60;
+
+    // DMS format, DEGREES MINUTES SECONDS
+    processedData.push_back(to_string(degrees));
+    processedData.push_back(to_string(minutes));
+    processedData.push_back(to_string(seconds));
+    processedData.push_back(direction);
+}
+
+void GPS::pushDefaultValue(vector<string> &processedData)
+{
+    processedData.push_back("0");
+    processedData.push_back("0");
+    processedData.push_back("0");
+    processedData.push_back("N/A");
+}
+
+// Updated GPS::processGGAValues function
+vector<string> GPS::processGGAValues(const vector<string> &ggaValues)
+{
+    vector<string> processedData;
+
+    if (ggaValues.empty() || ggaValues.size() < 15)
     {
         cout << "Invalid GGA sentence: insufficient data" << endl;
-        return;
+
+        // Fill the processedData vector with default values
+        pushDefaultValue(processedData); // Latitude
+        pushDefaultValue(processedData); // Longitude
+
+        for (size_t i = 2; i < 15; ++i)
+        {
+            processedData.push_back("N/A");
+        }
+        
+        return processedData;
     }
 
-    cout << "Time (UTC): " << ggaValues[1] << " | ";
+    processedData.push_back(ggaValues[1]);
 
-    if (ggaValues[2] == "")
+    // Process latitude value
+    if (ggaValues[2].empty() || ggaValues[2] == "N/A" || ggaValues[3] == "N/A")
     {
-        cout << "Lat: " << 0 << " deg " << 0 << "' " << 0 << "'' N/A"
-             << " | ";
+        pushDefaultValue(processedData);
     }
     else
     {
-        rawVal = std::stod(ggaValues[2]);
-        degrees = static_cast<int>(rawVal / 100);
-        minutes = static_cast<int>(rawVal - (degrees * 100));
-        seconds = (rawVal - (degrees * 100) - minutes) * 60;
-
-        // DMS format, DEGREES MINUTES SECONDS
-        cout << "Lat: " << degrees << " deg " << minutes << "' " << seconds << "'' " << ggaValues[3] << " | ";
+        try
+        {
+            processCoordinate(ggaValues[2], ggaValues[3], processedData);
+        }
+        catch (const std::exception &e)
+        {
+            cout << "Error processing latitude value: " << e.what() << endl;
+            cout << "Value: " << ggaValues[2] << endl;
+        }
     }
 
-    if (ggaValues[4] == "")
+    // Process longitude value
+    if (ggaValues[4].empty() || ggaValues[4] == "N/A" || ggaValues[5] == "N/A")
     {
-        cout << "Long: " << 0 << " deg " << 0 << "' " << 0 << "'' N/A"
-             << " | ";
+        pushDefaultValue(processedData);
     }
     else
     {
-        rawVal = std::stod(ggaValues[4]);
-        degrees = static_cast<int>(rawVal / 100);
-        minutes = static_cast<int>(rawVal - (degrees * 100));
-        seconds = (rawVal - (degrees * 100) - minutes) * 60;
-
-        // DMS format, DEGREES MINUTES SECONDS
-        cout << "Long: " << degrees << " deg " << minutes << "' " << seconds << "'' " << ggaValues[5] << " | ";
+        try
+        {
+            processCoordinate(ggaValues[4], ggaValues[5], processedData);
+        }
+        catch (const std::exception &e)
+        {
+            cout << "Error processing longitude value: " << e.what() << endl;
+            cout << "Value: " << ggaValues[4] << endl;
+        }
     }
 
-    // Fix Quality
-    cout << "Fix: ";
-
-    switch (stoi(ggaValues[6]))
+    // Process remaining values
+    for (size_t i = 6; i < 15; ++i)
     {
-    case 0:
-        cout << "Not Valid";
-        break;
-    case 1:
-        cout << "Valid";
-        break;
-    // case 2:
-    //     cout << "Differential GPS fix (DGNSS), SBAS, OmniSTAR VBS, Beacon, RTX in GVBS mode";
-    //     break;
-    // case 3:
-    //     cout << "Not applicable";
-    //     break;
-    // case 4:
-    //     cout << "RTK Fixed, xFill";
-    //     break;
-    // case 5:
-    //     cout << "RTK Float, OmniSTAR XP/HP, Location RTK, RTX";
-    //     break;
-    // case 6:
-    //     cout << "INS Dead reckoning";
-    //     break;
-    default:
-        cout << stoi(ggaValues[6]);
+        if (ggaValues[i].empty())
+        {
+            processedData.push_back("N/A");
+        }
+        else
+        {
+            if ((i == 9) || (i == 11))
+            {
+                processedData.push_back(ggaValues[i] + " " + ggaValues[i + 1]);
+                ++i;
+            }
+            else
+            {
+                processedData.push_back(ggaValues[i]);
+            }
+        }
     }
-    cout << " | ";
 
-    // Number of Satellites
-    cout << "# Sat: " << std::stod(ggaValues[7]) << " | ";
+    return processedData;
+}
 
-    // Horizontal Dilution of Precision (
-    cout << "HDOP: " << ggaValues[8] << " | ";
-    cout << "Alt: " << ggaValues[9] << " " << ggaValues[10] << " | ";
+// Function to print out GGA values
+void GPS::printGGAValues(const vector<string> &ggaValues)
+{
+    vector<string> processedData = ggaValues;
 
-    // Geoidal Separation
-    cout << "G.S: " << ggaValues[11] << " " << ggaValues[12] << " | ";
-
-    // Age of Differential GPS Data
-    cout << "Diff Age: " << ggaValues[13] << " | ";
-
-    // Differential Reference Station ID
-    cout << "Ref ID: " << ggaValues[14] << endl;
+    cout << "Time (UTC): " << processedData[0] << " | ";
+    cout << "Lat: " << processedData[1] << " deg " << processedData[2] << "' " << processedData[3] << "'' " << processedData[4] << " | ";
+    cout << "Long " << processedData[5] << " deg " << processedData[6] << "' " << processedData[7] << "'' " << processedData[8] << " | ";
+    cout << "Fix: " << processedData[9] << " | ";
+    cout << "# Sat: " << processedData[10] << " | ";
+    cout << "HDOP: " << processedData[11] << " | ";
+    cout << "Alt: " << processedData[12] << " " << processedData[13] << " | ";
+    cout << "G.S: " << processedData[14] << " " << processedData[15] << " | ";
+    cout << "Diff Age: " << processedData[16] << " | ";
+    cout << "Ref ID: " << processedData[17] << endl;
 }
