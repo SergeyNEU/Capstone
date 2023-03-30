@@ -14,7 +14,22 @@
 #include <iterator>
 #include <algorithm>
 #include <bitset>
-
+#include <ctime>
+#include <iostream>
+#include <chrono>
+#include <ctime>
+#include <iostream>
+#include <chrono>
+#include <deque>
+#include <vector>
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <iterator>
+#include <dirent.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <base64.h>
 
 const std::string base64_chars =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -31,7 +46,7 @@ void captureImage(const std::string &filename)
     camera.captureImage();
 }
 
-// // GPS functions
+// GPS functions
 void configureGPS(GPS &parser)
 {
     bool serialPortConfiguration = parser.configureSerialPort();
@@ -64,57 +79,64 @@ void printGPSData(const std::vector<std::string> &ggaValues)
     parser.printGGAValues(ggaValues);
 }
 
-// Convert img to string
-std::string base64_encode(unsigned char const* bytes_to_encode, unsigned int in_len) {
-    std::string ret;
-    int i = 0;
-    int j = 0;
-    unsigned char char_array_3[3];
-    unsigned char char_array_4[4];
+void sendToBluetooth(const std::string &timestamp, const std::vector<std::string> &processedData)
+{
+    pid_t pid = fork();
 
-    while (in_len--) {
-        char_array_3[i++] = *(bytes_to_encode++);
-        if (i == 3) {
-            char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
-            char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
-            char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
-            char_array_4[3] = char_array_3[2] & 0x3f;
+    if (pid == -1)
+    {
+        std::cerr << "Error: Failed to fork the process for sendToBluetooth." << std::endl;
+    }
+    else if (pid == 0)
+    {
+        // Child process
 
-            for (i = 0; (i <4) ; i++)
-                ret += base64_chars[char_array_4[i]];
-            i = 0;
+        std::string imagesDirectory = "./images/";
+        std::string txtFilename = imagesDirectory + "image_" + timestamp + ".txt";
+        std::string csvFilename = imagesDirectory + "image_" + timestamp + ".csv";
+        std::string processedImageFilename = imagesDirectory + "image_" + timestamp + "_processed.jpg";
+
+        // Continuously check if the corresponding .txt file exists and is not empty
+        bool fileFound = false;
+        while (!fileFound)
+        {
+            std::ifstream txtFile(txtFilename);
+            if (txtFile && !txtFile.peek() == std::ifstream::traits_type::eof())
+            {
+                fileFound = true;
+
+                std::string line;
+                std::getline(txtFile, line);
+
+                // Extract the second value (certainty percentage) from the file
+                std::istringstream iss(line);
+                std::vector<std::string> tokens(std::istream_iterator<std::string>{iss}, std::istream_iterator<std::string>());
+                int certaintyValue = std::stoi(tokens[1]);
+
+                // Convert the processed image to base64
+                std::ifstream imageFile(processedImageFilename, std::ios::binary);
+                std::string imageString((std::istreambuf_iterator<char>(imageFile)), std::istreambuf_iterator<char>());
+                std::string base64Image = base64::encode(imageString);
+
+                // Create a CSV file with the certainty value and the base64 converted image-to-string value
+                std::ofstream csvFile(csvFilename);
+                csvFile << processedData[1] << "," << processedData[2] << "," << processedData[3] << "," << processedData[5] << "," << processedData[6] << "," << processedData[7] << "," << certaintyValue << "," << base64Image;
+                csvFile.close();
+            }
+            else
+            {
+                // Sleep for a while before checking again
+                usleep(100000); // 100 ms
+            }
         }
+
+        exit(0); // Ensure this child process exits after completing its tasks
     }
-
-    if (i) {
-        for (j = i; j < 3; j++)
-            char_array_3[j] = '\0';
-
-        char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
-        char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
-        char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
-        char_array_4[3] = char_array_3[2] & 0x3f;
-
-        for (j = 0; (j < i + 1); j++)
-            ret += base64_chars[char_array_4[j]];
-
-        while ((i++ < 3))
-            ret += '=';
+    else
+    {
+        // Parent process
+        std::cout << "SendToBluetooth process started. Process ID: " << pid << std::endl;
     }
-
-    return ret;
-}
-
-std::string imageToString(const std::string& imagePath) {
-    cv::Mat img = cv::imread(imagePath, cv::IMREAD_COLOR);
-    if (img.empty()) {
-        std::cerr << "Error: Could not read the image file." << std::endl;
-        return "";
-    }
-
-    std::vector<uchar> buf;
-    cv::imencode(".jpg", img, buf);
-    return base64_encode
 }
 
 int main(int argc, char *argv[])
@@ -148,8 +170,9 @@ int main(int argc, char *argv[])
         int cooldownCounter = 0;
         float avgValue_beforePothole = 0;
         float avgValue = 0;
+        std::vector<std::string> processedGPSData;
 
-        for (int x = 0; x < 10000; x++)
+        for (int x = 0; x < 100000; x++)
         {
             sh.getSensorData(sensorData);
             float currentValue = sensorData[4];
@@ -163,19 +186,24 @@ int main(int argc, char *argv[])
             {
 
                 printf("Raspberry Pi has detected a pothole.\n");
+
                 // Get GPS coordinates
                 std::vector<std::string> ggaValues = getGPSData(parser);
                 if (!ggaValues.empty())
                 {
-                    printGPSData(parser.processGGAValues(ggaValues));
+                    processedGPSData = parser.processGGAValues(ggaValues)
+                    printGPSData(processedGPSData);
                 }
 
                 // Capture image creates two background processes that captures image and processes it.
-                std::string filename = "./images/image_" + std::to_string(x) + ".jpg";
+                auto now = std::chrono::system_clock::now();
+                auto duration = now.time_since_epoch();
+                auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+                std::string filename = "./images/image_" + std::to_string(millis) + ".jpg";
                 captureImage(filename);
-                
-                imageToString(filename);
-                
+
+                //Create background that looks for image, .txt, and _processed image to send.
+                sendToBluetooth(millis, processedGPSData);
             }
         }
     }
