@@ -1,7 +1,8 @@
-#include <iostream> // Include the iostream library for input/output operations
-#include <sstream>  // Include the stringstream library for creating and manipulating string streams
-#include <cstdlib>  // Include the cstdlib library for general-purpose functions, such as system()
+#include <iostream>                    // Include the iostream library for input/output operations
+#include <sstream>                     // Include the stringstream library for creating and manipulating string streams
+#include <cstdlib>                     // Include the cstdlib library for general-purpose functions, such as system()
 #include "bluetooth_file_transfer.hpp" // For main.cpp integration
+// Note: Uncomment anything related to main.cpp integrated if you would like to use this as a standalone script
 
 // Function: transfer_file_over_bluetooth_ftp
 // Purpose:  Transfers a file to a remote device over Bluetooth FTP
@@ -20,10 +21,10 @@ bool transfer_file_over_bluetooth_ftp(const std::string &bt_addr, int ftp_channe
     int result = std::system(command.str().c_str());
 
     // Compare the result to 0 and return 'true' if equal, indicating success; otherwise, return 'false'
-    return result;
+    return result; // If does not work, try return result==0;
 }
 
-/* Commented the main function out of this file so we could integreate it into main.cpp 
+/* Commented the main function out of this file so we could integreate it into main.cpp
 int main(int argc, char **argv)
 {
     // Check if the correct number of command-line arguments is provided
