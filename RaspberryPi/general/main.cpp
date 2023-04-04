@@ -95,7 +95,7 @@ void printGPSData(const std::vector<std::string> &ggaValues)
     parser.printGGAValues(ggaValues);
 }
 
-void sendToBluetooth(const std::string &timestamp, const std::vector<std::string> &processedData)
+void sendToBluetooth(const std::vector<long long> &millisBuffer, const std::vector<std::vector<std::string>> &gpsBuffer)
 {
     pid_t pid = fork();
 
@@ -104,9 +104,13 @@ void sendToBluetooth(const std::string &timestamp, const std::vector<std::string
         std::cerr << "sendToBluetooth Error: Failed to fork the process." << std::endl;
     }
     else if (pid == 0)
+    {
+        // Child process
+        std::string imagesDirectory = "./images/";
+
+        for (size_t i = 0; i < millisBuffer.size(); ++i)
         {
-            // Child process
-            std::string imagesDirectory = "./images/";
+            std::string timestamp = std::to_string(millisBuffer[i]);
             std::string txtFilename = imagesDirectory + "image_" + timestamp + ".txt";
             std::string csvFilename = imagesDirectory + "image_" + timestamp + ".csv";
             std::string processedImageFilename = imagesDirectory + "image_" + timestamp + "_processed.jpg";
@@ -120,7 +124,7 @@ void sendToBluetooth(const std::string &timestamp, const std::vector<std::string
                 std::ifstream txtFile(txtFilename);
                 if (txtFile)
                 {
-                    usleep(500000); // 100 ms
+                    usleep(500000); // 500 ms
                     std::string line;
                     std::getline(txtFile, line);
                     if (line == "")
@@ -143,6 +147,8 @@ void sendToBluetooth(const std::string &timestamp, const std::vector<std::string
                     std::string imageString((std::istreambuf_iterator<char>(imageFile)), std::istreambuf_iterator<char>());
                     std::string base64Image = base64_encode(imageString);
 
+                    // Write buffered data to CSV file
+                    const auto &processedData = gpsBuffer[i];
                     std::ofstream csvFile(csvFilename);
                     csvFile << processedData[1] << "," << processedData[2] << "," << processedData[3] << "," << processedData[5] << "," << processedData[6] << "," << processedData[7] << "," << certaintyValue << "," << base64Image;
                     csvFile.close();
@@ -155,7 +161,6 @@ void sendToBluetooth(const std::string &timestamp, const std::vector<std::string
                     std::stringstream command;
                     // Populate the command string with the appropriate parameters
                     command << "obexftp --nopath --noconn --uuid none --bluetooth " << bt_addr << " --channel " << ftp_channel << " -p " << csvFilename;
-
                     // Execute the command using the system() function and store the result in an int variable
                     int result = std::system(command.str().c_str());
                 }
@@ -170,9 +175,10 @@ void sendToBluetooth(const std::string &timestamp, const std::vector<std::string
             {
                 std::cout << "SendToBluetooth: Process timed out!" << std::endl;
             }
-
-            exit(0); // Ensure this child process exits after completing its tasks
         }
+
+        exit(0); // Ensure this child process exits after completing its tasks
+    }
     else
     {
         // Parent process
@@ -236,6 +242,8 @@ int main(int argc, char *argv[])
         int cooldownCounter = 0;
         float avgValue_beforePothole = 0;
         float avgValue = 0;
+        std::vector<long long> timestampBuffer;
+        std::vector<std::vector<std::string>> gpsBuffer;
 
         printf("Waiting for potholes...\n");
         for (int x = 0; x < 100000; x++)
@@ -267,12 +275,16 @@ int main(int argc, char *argv[])
                 auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
                 std::string filename = "./images/image_" + std::to_string(millis) + ".jpg";
                 captureImage(filename);
+                timestampBuffer.push_back(millis);
+                gpsBuffer.push_back(processedGPSData);
 
                 // Check if there is a valid Bluetooth connection before sending data
                 if (isBluetoothConnected())
                 {
                     // Valid Bluetooth connection exists, proceed to send data
-                    sendToBluetooth(std::to_string(millis), processedGPSData);
+                    sendToBluetooth(timestampBuffer, gpsBuffer);
+                    timestampBuffer.clear(); // Clear the buffer after sending
+                    gpsBuffer.clear();
                 }
                 else
                 {
