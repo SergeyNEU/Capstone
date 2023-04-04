@@ -1,8 +1,8 @@
 CXX = g++
 CC = gcc
-CXXFLAGS = -std=c++11 -Wall -Wextra -pedantic -lwiringPi -lm -O3
-CFLAGS = -Wall -Wextra -pedantic -lwiringPi -lm -O3
-LDFLAGS = -std=c++11 -Wall -Wextra -pedantic -lwiringPi -lm -O3
+CXXFLAGS = -std=c++11 -Wall -Wextra -pedantic -lssl -lcrypto -lwiringPi -lm -O3
+CFLAGS = -Wall -Wextra -pedantic -lwiringPi -lssl -lcrypto -lm -O3
+LDFLAGS = -std=c++11 -Wall -Wextra -pedantic -lssl -lcrypto -lwiringPi -lm -O3
 
 CPP_SRCS = main.cpp ../camera/camera.cpp ../gps/gps.cpp ../sensehat/sensehat.cpp
 C_SRCS = ../sensehat/ICM20948.c

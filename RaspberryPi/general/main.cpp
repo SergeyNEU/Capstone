@@ -65,7 +65,7 @@ int captureImage(const std::string &filename)
 // GPS functions
 void configureGPS(GPS &parser)
 {
-    timeLimitSamples bool serialPortConfiguration = parser.configureSerialPort();
+    bool serialPortConfiguration = parser.configureSerialPort();
 
     if (serialPortConfiguration)
     {
@@ -104,7 +104,6 @@ void sendToBluetooth(const std::string &timestamp, const std::vector<std::string
         std::cerr << "sendToBluetooth Error: Failed to fork the process." << std::endl;
     }
     else if (pid == 0)
-        timeLimitSamples
         {
             // Child process
             std::string imagesDirectory = "./images/";
@@ -121,8 +120,7 @@ void sendToBluetooth(const std::string &timestamp, const std::vector<std::string
                 std::ifstream txtFile(txtFilename);
                 if (txtFile)
                 {
-                    timeLimitSamples
-                        usleep(500000); // 100 ms
+                    usleep(500000); // 100 ms
                     std::string line;
                     std::getline(txtFile, line);
                     if (line == "")
@@ -141,7 +139,7 @@ void sendToBluetooth(const std::string &timestamp, const std::vector<std::string
                     float certaintyValue = std::stof(tokens[1]);
 
                     // Convert the processed image to base64
-                    std::ifstream imageFile(processedImageFilename, std::timeLimitSamplesios::binary);
+                    std::ifstream imageFile(processedImageFilename, std::ios::binary);
                     std::string imageString((std::istreambuf_iterator<char>(imageFile)), std::istreambuf_iterator<char>());
                     std::string base64Image = base64_encode(imageString);
 
@@ -160,7 +158,6 @@ void sendToBluetooth(const std::string &timestamp, const std::vector<std::string
 
                     // Execute the command using the system() function and store the result in an int variable
                     int result = std::system(command.str().c_str());
-                    timeLimitSamples
                 }
                 else
                 {
@@ -182,16 +179,37 @@ void sendToBluetooth(const std::string &timestamp, const std::vector<std::string
         std::cout << "SendToBluetooth process started. Process ID: " << pid << std::endl;
     }
 }
-// Add isBluetoothConnected function definition here if needs to be moved outside of main. -Muhammad
+
+// Function: isBluetoothConnected
+// Purpose:  Checks if there is a valid Bluetooth connection with a specific device
+// Returns:  bool - true if the connection exists, false otherwise
+bool isBluetoothConnected()
+{
+    // Define the Bluetooth address for the target device, which is the Android phone (case sensitive)
+    const std::string bt_addr = "B4:F1:DA:66:C3:A5"; // I believe this variable is previously defined. If so, delete this line. Redundant.
+
+    // Create a stringstream variable to store the hcitool command string
+    std::stringstream command;
+
+    // Populate the command string with the appropriate parameters to
+    // find established connections with the target Bluetooth address
+    command << "hcitool con | grep " << bt_addr;
+
+    // Execute the command using the system() function and store the result in an int variable
+    // The system() function returns 0 if the command was successful (i.e., the connection was found)
+    int result = std::system(command.str().c_str());
+
+    // Return true if the result is 0, meaning that the connection exists; otherwise, return false
+    return (result == 0);
+}
 
 int main(int argc, char *argv[])
 {
     SenseHat sh;
     float sensorData[12];
-    timeLimitSamples
 
-        // Initialize GPS
-        GPS parser;
+    // Initialize GPS
+    GPS parser;
     configureGPS(parser);
 
     std::vector<std::string> processedGPSData;
@@ -250,38 +268,8 @@ int main(int argc, char *argv[])
                 std::string filename = "./images/image_" + std::to_string(millis) + ".jpg";
                 captureImage(filename);
 
-                // TODO - Muhammad: Implement logic to only execute the following line if valid BT connection:
-
-                // See comment above main() indicating if isBluetoothConnected() needs to be moved there. -Muhammad
-
-                // Function: isBluetoothConnected
-                // Purpose:  Checks if there is a valid Bluetooth connection with a specific device
-                // Returns:  bool - true if the connection exists, false otherwise
-                bool isBluetoothConnected()
-                {
-                    // Define the Bluetooth address for the target device, which is the Android phone (case sensitive)
-                    const std::string bt_addr = "B4:F1:DA:66:C3:A5"; // I believe this variable is previously defined. If so, delete this line. Redundant.
-
-                    // Create a stringstream variable to store the hcitool command string
-                    std::stringstream command;
-
-                    // Populate the command string with the appropriate parameters to
-                    // find established connections with the target Bluetooth address
-                    command << "hcitool con | grep " << bt_addr;
-
-                    // Execute the command using the system() function and store the result in an int variable
-                    // The system() function returns 0 if the command was successful (i.e., the connection was found)
-                    int result = std::system(command.str().c_str());
-
-                    // Return true if the result is 0, meaning that the connection exists; otherwise, return false
-                    return (result == 0);
-                }
-
                 // Check if there is a valid Bluetooth connection before sending data
-                // 1. Call the isBluetoothConnected() function to check for an existing Bluetooth connection
-                // 2. If a valid Bluetooth connection is found, proceed to send data using sendToBluetooth()
-                // 3. If no valid Bluetooth connection is found, skip the sendToBluetooth() function and display a message
-                if (isBluetoothConnected()) // if isBluetoothConnected() == true
+                if (isBluetoothConnected())
                 {
                     // Valid Bluetooth connection exists, proceed to send data
                     sendToBluetooth(std::to_string(millis), processedGPSData);
