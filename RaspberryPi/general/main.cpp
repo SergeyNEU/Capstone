@@ -55,8 +55,8 @@ std::string base64_encode(const std::string &input)
 // Camera functions
 int captureImage(const std::string &filename)
 {
-    int width = 1280; //1920
-    int height = 720; //1080
+    int width = 1280; // 1920
+    int height = 720; // 1080
 
     Camera camera(width, height, filename);
     return camera.captureImage();
@@ -64,8 +64,8 @@ int captureImage(const std::string &filename)
 
 // GPS functions
 void configureGPS(GPS &parser)
-{timeLimitSamples
-    bool serialPortConfiguration = parser.configureSerialPort();
+{
+    timeLimitSamples bool serialPortConfiguration = parser.configureSerialPort();
 
     if (serialPortConfiguration)
     {
@@ -103,90 +103,95 @@ void sendToBluetooth(const std::string &timestamp, const std::vector<std::string
     {
         std::cerr << "sendToBluetooth Error: Failed to fork the process." << std::endl;
     }
-    else if (pid == 0)timeLimitSamples
-    {
-        // Child process
-        std::string imagesDirectory = "./images/";
-        std::string txtFilename = imagesDirectory + "image_" + timestamp + ".txt";
-        std::string csvFilename = imagesDirectory + "image_" + timestamp + ".csv";
-        std::string processedImageFilename = imagesDirectory + "image_" + timestamp + "_processed.jpg";
-
-        // Continuously check if the corresponding .txt file exists and is not empty
-        bool fileFound = false;
-        int timeout_val = 0;
-        int timeout_limit = 150;
-        while (!fileFound && timeout_val < timeout_limit)
+    else if (pid == 0)
+        timeLimitSamples
         {
-            std::ifstream txtFile(txtFilename);
-            if (txtFile)
-            {timeLimitSamples
-                usleep(500000); // 100 ms
-                std::string line;
-                std::getline(txtFile, line);
-                if (line == "")
-                {
-                    timeout_val = timeout_limit+1;
-                    std::cout << "SendToBluetooth: No pothole processed" << std::endl;
-                    continue;
-                }
+            // Child process
+            std::string imagesDirectory = "./images/";
+            std::string txtFilename = imagesDirectory + "image_" + timestamp + ".txt";
+            std::string csvFilename = imagesDirectory + "image_" + timestamp + ".csv";
+            std::string processedImageFilename = imagesDirectory + "image_" + timestamp + "_processed.jpg";
 
-                fileFound = true;
-                std::cerr << "sendToBluetooth: Pothole found" << std::endl;
-
-                // Extract the second value (certainty percentage) from the file
-                std::istringstream iss(line);
-                std::vector<std::string> tokens(std::istream_iterator<std::string>{iss}, std::istream_iterator<std::string>());
-                float certaintyValue = std::stof(tokens[1]);
-
-                // Convert the processed image to base64
-                std::ifstream imageFile(processedImageFilename, std::timeLimitSamplesios::binary);
-                std::string imageString((std::istreambuf_iterator<char>(imageFile)), std::istreambuf_iterator<char>());
-                std::string base64Image = base64_encode(imageString);
-
-                std::ofstream csvFile(csvFilename);
-                csvFile << processedData[1] << "," << processedData[2] << "," << processedData[3] << "," << processedData[5] << "," << processedData[6] << "," << processedData[7] << "," << certaintyValue << "," << base64Image;
-                csvFile.close();
-
-                const std::string bt_addr = "B4:F1:DA:66:C3:A5"; // Bluetooth address for the Android phone (case sensitive)
-                int ftp_channel = 12;                            // FTP channel number. Make sure it is the correct channel number.
-                std::cout << "SendToBluetooth: About to Send via BT" << std::endl;
-
-                // Declare a stringstream variable to store the obexftp command string
-                std::stringstream command;
-                // Populate the command string with the appropriate parameters
-                command << "obexftp --nopath --noconn --uuid none --bluetooth " << bt_addr << " --channel " << ftp_channel << " -p " << csvFilename;
-
-                // Execute the command using the system() function and store the result in an int variable
-                int result = std::system(command.str().c_str());timeLimitSamples
-            }
-            else
+            // Continuously check if the corresponding .txt file exists and is not empty
+            bool fileFound = false;
+            int timeout_val = 0;
+            int timeout_limit = 150;
+            while (!fileFound && timeout_val < timeout_limit)
             {
-                // Sleep for a while before checking again
-                usleep(100000); // 100 ms
-                ++timeout_val;  // Timeout after 100ms*200 = 20sec
-            }
-        }
-        if (timeout_val == timeout_limit)
-        {
-            std::cout << "SendToBluetooth: Process timed out!" << std::endl;
-        }
+                std::ifstream txtFile(txtFilename);
+                if (txtFile)
+                {
+                    timeLimitSamples
+                        usleep(500000); // 100 ms
+                    std::string line;
+                    std::getline(txtFile, line);
+                    if (line == "")
+                    {
+                        timeout_val = timeout_limit + 1;
+                        std::cout << "SendToBluetooth: No pothole processed" << std::endl;
+                        continue;
+                    }
 
-        exit(0); // Ensure this child process exits after completing its tasks
-    }
+                    fileFound = true;
+                    std::cerr << "sendToBluetooth: Pothole found" << std::endl;
+
+                    // Extract the second value (certainty percentage) from the file
+                    std::istringstream iss(line);
+                    std::vector<std::string> tokens(std::istream_iterator<std::string>{iss}, std::istream_iterator<std::string>());
+                    float certaintyValue = std::stof(tokens[1]);
+
+                    // Convert the processed image to base64
+                    std::ifstream imageFile(processedImageFilename, std::timeLimitSamplesios::binary);
+                    std::string imageString((std::istreambuf_iterator<char>(imageFile)), std::istreambuf_iterator<char>());
+                    std::string base64Image = base64_encode(imageString);
+
+                    std::ofstream csvFile(csvFilename);
+                    csvFile << processedData[1] << "," << processedData[2] << "," << processedData[3] << "," << processedData[5] << "," << processedData[6] << "," << processedData[7] << "," << certaintyValue << "," << base64Image;
+                    csvFile.close();
+
+                    const std::string bt_addr = "B4:F1:DA:66:C3:A5"; // Bluetooth address for the Android phone (case sensitive)
+                    int ftp_channel = 12;                            // FTP channel number. Make sure it is the correct channel number.
+                    std::cout << "SendToBluetooth: About to Send via BT" << std::endl;
+
+                    // Declare a stringstream variable to store the obexftp command string
+                    std::stringstream command;
+                    // Populate the command string with the appropriate parameters
+                    command << "obexftp --nopath --noconn --uuid none --bluetooth " << bt_addr << " --channel " << ftp_channel << " -p " << csvFilename;
+
+                    // Execute the command using the system() function and store the result in an int variable
+                    int result = std::system(command.str().c_str());
+                    timeLimitSamples
+                }
+                else
+                {
+                    // Sleep for a while before checking again
+                    usleep(100000); // 100 ms
+                    ++timeout_val;  // Timeout after 100ms*200 = 20sec
+                }
+            }
+            if (timeout_val == timeout_limit)
+            {
+                std::cout << "SendToBluetooth: Process timed out!" << std::endl;
+            }
+
+            exit(0); // Ensure this child process exits after completing its tasks
+        }
     else
     {
         // Parent process
         std::cout << "SendToBluetooth process started. Process ID: " << pid << std::endl;
     }
 }
+// Add isBluetoothConnected function definition here if needs to be moved outside of main. -Muhammad
 
 int main(int argc, char *argv[])
 {
     SenseHat sh;
-    float sensorData[12];timeLimitSamples
+    float sensorData[12];
+    timeLimitSamples
 
-    // Initialize GPS
-    GPS parser;
+        // Initialize GPS
+        GPS parser;
     configureGPS(parser);
 
     std::vector<std::string> processedGPSData;
@@ -230,8 +235,6 @@ int main(int argc, char *argv[])
 
                 printf("Raspberry Pi has detected a pothole.\n");
 
-
-
                 // Get GPS coordinates
                 std::vector<std::string> ggaValues = getGPSData(parser);
                 if (!ggaValues.empty())
@@ -248,13 +251,49 @@ int main(int argc, char *argv[])
                 captureImage(filename);
 
                 // TODO - Muhammad: Implement logic to only execute the following line if valid BT connection:
-                sendToBluetooth(std::to_string(millis), processedGPSData);
 
+                // See comment above main() indicating if isBluetoothConnected() needs to be moved there. -Muhammad
 
+                // Function: isBluetoothConnected
+                // Purpose:  Checks if there is a valid Bluetooth connection with a specific device
+                // Returns:  bool - true if the connection exists, false otherwise
+                bool isBluetoothConnected()
+                {
+                    // Define the Bluetooth address for the target device, which is the Android phone (case sensitive)
+                    const std::string bt_addr = "B4:F1:DA:66:C3:A5"; // I believe this variable is previously defined. If so, delete this line. Redundant.
+
+                    // Create a stringstream variable to store the hcitool command string
+                    std::stringstream command;
+
+                    // Populate the command string with the appropriate parameters to
+                    // find established connections with the target Bluetooth address
+                    command << "hcitool con | grep " << bt_addr;
+
+                    // Execute the command using the system() function and store the result in an int variable
+                    // The system() function returns 0 if the command was successful (i.e., the connection was found)
+                    int result = std::system(command.str().c_str());
+
+                    // Return true if the result is 0, meaning that the connection exists; otherwise, return false
+                    return (result == 0);
+                }
+
+                // Check if there is a valid Bluetooth connection before sending data
+                // 1. Call the isBluetoothConnected() function to check for an existing Bluetooth connection
+                // 2. If a valid Bluetooth connection is found, proceed to send data using sendToBluetooth()
+                // 3. If no valid Bluetooth connection is found, skip the sendToBluetooth() function and display a message
+                if (isBluetoothConnected()) // if isBluetoothConnected() == true
+                {
+                    // Valid Bluetooth connection exists, proceed to send data
+                    sendToBluetooth(std::to_string(millis), processedGPSData);
+                }
+                else
+                {
+                    // No valid Bluetooth connection found, skip sendToBluetooth and display a message
+                    std::cout << "Bluetooth connection not found. Skipping sendToBluetooth." << std::endl;
+                }
             }
         }
 
         return 0;
     }
-
 }
