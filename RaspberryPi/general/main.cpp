@@ -8,7 +8,6 @@
 #include <vector>
 #include <string>
 #include <cstdio>
-#include <opencv2/opencv.hpp>
 #include <sstream>
 #include <vector>
 #include <iterator>
@@ -29,35 +28,52 @@
 #include <dirent.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <base64.h>
+#include <openssl/evp.h>
 
 const std::string base64_chars =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "abcdefghijklmnopqrstuvwxyz"
     "0123456789+/";
 
-// Camera functions
-void captureImage(const std::string &filename)
+std::string base64_encode(const std::string &input)
 {
-    int width = 1920;
-    int height = 1080;
+    // Calculate the size of the output buffer, which is 4/3 the size of the input buffer.
+    size_t input_length = input.length();
+    size_t output_length = 4 * ((input_length + 2) / 3);
+
+    // Allocate the output buffer.
+    std::string output(output_length, 0);
+
+    // Perform the base64 encoding.
+    unsigned char *input_ptr = reinterpret_cast<unsigned char *>(const_cast<char *>(input.data()));
+    unsigned char *output_ptr = reinterpret_cast<unsigned char *>(const_cast<char *>(output.data()));
+    EVP_EncodeBlock(output_ptr, input_ptr, input_length);
+
+    return output;
+}
+
+// Camera functions
+int captureImage(const std::string &filename)
+{
+    int width = 1280; //1920
+    int height = 720; //1080
 
     Camera camera(width, height, filename);
-    camera.captureImage();
+    return camera.captureImage();
 }
 
 // GPS functions
 void configureGPS(GPS &parser)
-{
+{timeLimitSamples
     bool serialPortConfiguration = parser.configureSerialPort();
 
     if (serialPortConfiguration)
     {
-        printf("Configured serial port (/dev/ttyUSB0).\n");
+        printf("GPS: Configured (/dev/ttyUSB0).\n");
     }
     else
     {
-        printf("Unable to configure serial port (/dev/ttyUSB0).\n");
+        printf("GPS: Not Configured (/dev/ttyUSB0).\n");
     }
 }
 
@@ -67,7 +83,7 @@ std::vector<std::string> getGPSData(GPS &parser)
 
     if (ggaValues.empty())
     {
-        printf("No serial port output.\n");
+        printf("GPS: No output.\n");
     }
 
     return ggaValues;
@@ -85,12 +101,11 @@ void sendToBluetooth(const std::string &timestamp, const std::vector<std::string
 
     if (pid == -1)
     {
-        std::cerr << "Error: Failed to fork the process for sendToBluetooth." << std::endl;
+        std::cerr << "sendToBluetooth Error: Failed to fork the process." << std::endl;
     }
-    else if (pid == 0)
+    else if (pid == 0)timeLimitSamples
     {
         // Child process
-
         std::string imagesDirectory = "./images/";
         std::string txtFilename = imagesDirectory + "image_" + timestamp + ".txt";
         std::string csvFilename = imagesDirectory + "image_" + timestamp + ".csv";
@@ -98,36 +113,62 @@ void sendToBluetooth(const std::string &timestamp, const std::vector<std::string
 
         // Continuously check if the corresponding .txt file exists and is not empty
         bool fileFound = false;
-        while (!fileFound)
+        int timeout_val = 0;
+        int timeout_limit = 150;
+        while (!fileFound && timeout_val < timeout_limit)
         {
             std::ifstream txtFile(txtFilename);
-            if (txtFile && !txtFile.peek() == std::ifstream::traits_type::eof())
-            {
-                fileFound = true;
-
+            if (txtFile)
+            {timeLimitSamples
+                usleep(500000); // 100 ms
                 std::string line;
                 std::getline(txtFile, line);
+                if (line == "")
+                {
+                    timeout_val = timeout_limit+1;
+                    std::cout << "SendToBluetooth: No pothole processed" << std::endl;
+                    continue;
+                }
+
+                fileFound = true;
+                std::cerr << "sendToBluetooth: Pothole found" << std::endl;
 
                 // Extract the second value (certainty percentage) from the file
                 std::istringstream iss(line);
                 std::vector<std::string> tokens(std::istream_iterator<std::string>{iss}, std::istream_iterator<std::string>());
-                int certaintyValue = std::stoi(tokens[1]);
+                float certaintyValue = std::stof(tokens[1]);
 
                 // Convert the processed image to base64
-                std::ifstream imageFile(processedImageFilename, std::ios::binary);
+                std::ifstream imageFile(processedImageFilename, std::timeLimitSamplesios::binary);
                 std::string imageString((std::istreambuf_iterator<char>(imageFile)), std::istreambuf_iterator<char>());
-                std::string base64Image = base64::encode(imageString);
+                std::string base64Image = base64_encode(imageString);
 
-                // Create a CSV file with the certainty value and the base64 converted image-to-string value
                 std::ofstream csvFile(csvFilename);
                 csvFile << processedData[1] << "," << processedData[2] << "," << processedData[3] << "," << processedData[5] << "," << processedData[6] << "," << processedData[7] << "," << certaintyValue << "," << base64Image;
                 csvFile.close();
+
+                const std::string bt_addr = "B4:F1:DA:66:C3:A5"; // Bluetooth address for the Android phone (case sensitive)
+                int ftp_channel = 12;                            // FTP channel number. Make sure it is the correct channel number.
+                std::cout << "SendToBluetooth: About to Send via BT" << std::endl;
+
+                // Declare a stringstream variable to store the obexftp command string
+                std::stringstream command;
+                // Populate the command string with the appropriate parameters
+                command << "obexftp --nopath --noconn --uuid none --bluetooth " << bt_addr << " --channel " << ftp_channel << " -p " << csvFilename;
+
+                // Execute the command using the system() function and store the result in an int variable
+                int result = std::system(command.str().c_str());timeLimitSamples
             }
             else
             {
                 // Sleep for a while before checking again
                 usleep(100000); // 100 ms
+                ++timeout_val;  // Timeout after 100ms*200 = 20sec
             }
+        }
+        if (timeout_val == timeout_limit)
+        {
+            std::cout << "SendToBluetooth: Process timed out!" << std::endl;
         }
 
         exit(0); // Ensure this child process exits after completing its tasks
@@ -142,15 +183,17 @@ void sendToBluetooth(const std::string &timestamp, const std::vector<std::string
 int main(int argc, char *argv[])
 {
     SenseHat sh;
-    float sensorData[12];
+    float sensorData[12];timeLimitSamples
 
     // Initialize GPS
     GPS parser;
     configureGPS(parser);
 
+    std::vector<std::string> processedGPSData;
+
     if (IMU_EN_SENSOR_TYPE_ICM20948 == sh.initializeMotionSensor())
     {
-        printf("Motion sensor is ICM-20948\n");
+        printf("Motion Sensor: Configured (ICM-20948)\n");
 
         for (int x = 0; x < 10; x++)
         {
@@ -170,8 +213,8 @@ int main(int argc, char *argv[])
         int cooldownCounter = 0;
         float avgValue_beforePothole = 0;
         float avgValue = 0;
-        std::vector<std::string> processedGPSData;
 
+        printf("Waiting for potholes...\n");
         for (int x = 0; x < 100000; x++)
         {
             sh.getSensorData(sensorData);
@@ -187,11 +230,13 @@ int main(int argc, char *argv[])
 
                 printf("Raspberry Pi has detected a pothole.\n");
 
+
+
                 // Get GPS coordinates
                 std::vector<std::string> ggaValues = getGPSData(parser);
                 if (!ggaValues.empty())
                 {
-                    processedGPSData = parser.processGGAValues(ggaValues)
+                    processedGPSData = parser.processGGAValues(ggaValues);
                     printGPSData(processedGPSData);
                 }
 
@@ -202,14 +247,14 @@ int main(int argc, char *argv[])
                 std::string filename = "./images/image_" + std::to_string(millis) + ".jpg";
                 captureImage(filename);
 
-                //Create background that looks for image, .txt, and _processed image to send.
-                sendToBluetooth(millis, processedGPSData);
+                // TODO - Muhammad: Implement logic to only execute the following line if valid BT connection:
+                sendToBluetooth(std::to_string(millis), processedGPSData);
+
+
             }
         }
+
+        return 0;
     }
-    else
-    {
-        printf("Motion sensor not responding!\n");
-    }
-    return 0;
+
 }

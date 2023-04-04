@@ -28,34 +28,26 @@ int Camera::captureImage()
 
         if (pid_capture == -1)
         {
-            std::cerr << "Error: Failed to fork the process." << std::endl;
+            std::cerr << "Image capture error: Failed to fork the process." << std::endl;
             exit(1);
         }
         else if (pid_capture == 0)
         {
             // In the child process for image capture
             execl("/bin/sh", "sh", "-c", command.c_str(), (char *)NULL);
-            std::cerr << "Error: Failed to execute command." << std::endl;
+            std::cerr << "Image capture error: Failed to execute command." << std::endl;
             exit(1);
         }
         else
         {
             // In the parent process
             std::cout << "Image capture started. Process ID: " << pid_capture;
-            int status;
-            waitpid(pid_capture, &status, 0);
-
-            if (status != 0)
-            {
-                std::cerr  << std::endl << "Error: Failed to capture image." << std::endl;
-                exit(1);
-            }
 
             // Run the Python script as a child process
             std::string clean_filename = m_filename.substr(9);
 
             std::cout << "... Done (" << clean_filename << ")" << std::endl;
-
+            usleep(100000); // 100 ms
             std::string python_command = "python3 detect_tflite.py /home/tpp/Desktop/Capstone/RaspberryPi/general/images/" + clean_filename;
             std::string script_directory = "/home/tpp/Desktop/Capstone/ml_new/custom_model_lite"; // Change this to the actual script directory
 
@@ -63,7 +55,7 @@ int Camera::captureImage()
 
             if (pid_python == -1)
             {
-                std::cerr << "Error: Failed to fork the process." << std::endl;
+                std::cerr << "Machine vision error: Failed to fork the process." << std::endl;
                 exit(1);
             }
             else if (pid_python == 0)
@@ -71,7 +63,7 @@ int Camera::captureImage()
                 // In the child process for running the Python script
                 chdir(script_directory.c_str()); // Change the working directory to the script's directory
                 execl("/bin/sh", "sh", "-c", python_command.c_str(), (char *)NULL);
-                std::cerr << "Error: Failed to execute Python command." << std::endl;
+                std::cerr << "Machine vision error: Failed to execute Python command." << std::endl;
                 exit(1);
             }
             else

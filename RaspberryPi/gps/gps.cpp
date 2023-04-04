@@ -66,7 +66,7 @@ vector<string> GPS::parse()
     bytesRead = read(serialPort, buffer, MAX_BUFFER_SIZE);
     if (bytesRead == -1)
     {
-        perror("Error: Unable to read from serial port");
+        perror("GPS Error: Is it connected via USB?");
         return {};
     }
 
