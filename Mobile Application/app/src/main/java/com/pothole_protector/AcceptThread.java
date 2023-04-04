@@ -7,6 +7,7 @@ import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.util.Log;
 
@@ -18,8 +19,10 @@ public class AcceptThread extends Thread {
     private static final String NAME = "pothole_protector";
     private static final String UUID_NAME = "f6d79071-f92f-4cd9-98b9-34a1ce6dae9e";
 
+    private Context mContext;
+
     @SuppressLint("MissingPermission")
-    public AcceptThread(BluetoothAdapter adapter) {
+    public AcceptThread(BluetoothAdapter adapter, Context context) {
         // Use a temporary object that is later assigned to mmServerSocket
         // because mmServerSocket is final.
         BluetoothServerSocket tmp = null;
@@ -59,7 +62,7 @@ public class AcceptThread extends Thread {
     }
 
     private void showAlert() {
-        AlertDialog.Builder alertbox = new AlertDialog.Builder(BluetoothActivity.getContext());
+        AlertDialog.Builder alertbox = new AlertDialog.Builder(mContext);
 
         alertbox.setTitle("Do you want To exit ?");
         alertbox.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
