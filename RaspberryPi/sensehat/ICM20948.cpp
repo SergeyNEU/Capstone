@@ -241,7 +241,7 @@ extern "C"
     }
     else
     {
-      printf("ERROR: I2C_ReadOneByte(REG_ADD_WIA): %x \n", I2C_ReadOneByte(REG_ADD_WIA));
+      //printf("ERROR: I2C_ReadOneByte(REG_ADD_WIA): %x \n", I2C_ReadOneByte(REG_ADD_WIA));
     }
     return bRet;
   }

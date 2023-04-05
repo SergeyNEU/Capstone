@@ -112,7 +112,7 @@ void sendToBluetooth(const std::vector<long long> &millisBuffer, const std::vect
         {
             std::string timestamp = std::to_string(millisBuffer[i]);
             std::string txtFilename = imagesDirectory + "image_" + timestamp + ".txt";
-            std::string csvFilename = imagesDirectory + "image_" + timestamp + ".csv";
+            std::string csvFilename = imagesDirectory + "pothole_image_" + timestamp + ".csv";
             std::string processedImageFilename = imagesDirectory + "image_" + timestamp + "_processed.jpg";
 
             // Continuously check if the corresponding .txt file exists and is not empty
@@ -259,14 +259,14 @@ int main(int argc, char *argv[])
             if (values.size() >= windowSize && sh.detectPothole(avgValue, currentValue, &avgValue_beforePothole, movementThreshold, returnThreshold, state, counter, timeLimitSamples, cooldownCounter, cooldownSamples))
             {
 
-                printf("Raspberry Pi has detected a pothole.\n");
+                printf("Raspberry Pi has detected a pothole!\n");
 
                 // Get GPS coordinates
                 std::vector<std::string> ggaValues = getGPSData(parser);
                 if (!ggaValues.empty())
                 {
                     processedGPSData = parser.processGGAValues(ggaValues);
-                    printGPSData(processedGPSData);
+                    //printGPSData(processedGPSData);
                 }
 
                 // Capture image creates two background processes that captures image and processes it.
@@ -289,7 +289,7 @@ int main(int argc, char *argv[])
                 else
                 {
                     // No valid Bluetooth connection found, skip sendToBluetooth and display a message
-                    std::cout << "Bluetooth connection not found. Skipping sendToBluetooth." << std::endl;
+                    std::cout << "SendToBluetooth: No connection" << std::endl;
                 }
             }
         }

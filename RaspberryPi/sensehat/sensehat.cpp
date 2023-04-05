@@ -11,7 +11,7 @@ int SenseHat::initializeMotionSensor()
         imuInit(&motionSensorType);
         if (motionSensorType != IMU_EN_SENSOR_TYPE_ICM20948)
         {
-            printf("Motion sensor is not responding, retrying...\n");
+            //printf("Motion sensor is not responding, retrying...\n");
             getSensorData(sensorData);
             usleep(5000);
         }
