@@ -90,7 +90,7 @@ void printGPSData(const std::vector<std::string> &ggaValues)
     parser.printGGAValues(ggaValues);
 }
 
-void sendToBluetooth(const std::vector<long long> &millisBuffer, const std::vector<std::vector<std::string>> &gpsBuffer)
+void sendToBluetooth(std::vector<long long> &millisBuffer, std::vector<std::vector<std::string>> &gpsBuffer)
 {
     pid_t pid = fork();
 
@@ -171,8 +171,8 @@ void sendToBluetooth(const std::vector<long long> &millisBuffer, const std::vect
                 std::cout << "SendToBluetooth: Process timed out!" << std::endl;
             }
         }
-                            
-        timestampBuffer.clear();
+
+        millisBuffer.clear();
         gpsBuffer.clear();
 
         exit(0); // Ensure this child process exits after completing its tasks
@@ -207,7 +207,8 @@ bool isBluetoothConnected()
     return (result == 0);
 }
 
-long long getTimestamp() {
+long long getTimestamp()
+{
     auto now = std::chrono::system_clock::now();
     auto duration = now.time_since_epoch();
     auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
@@ -222,8 +223,35 @@ int main(int argc, char *argv[])
     // Initialize GPS
     GPS parser;
     configureGPS(parser);
+    std::vector<long long> timestampBuffer;
+    std::vector<std::vector<std::string>> gpsBuffer;
 
     std::vector<std::string> processedGPSData;
+
+    printf("Raspberry Pi has detected a pothole!\n");
+    sleep(1);
+    std::vector<std::string> ggaValues = getGPSData(parser);
+    if (!ggaValues.empty())
+    {
+        processedGPSData = parser.processGGAValues(ggaValues);
+    }
+
+    // Capture image creates two background processes that captures image and processes it.
+    auto time = getTimestamp();
+    std::string filename = "./images/image_" + std::to_string(time) + ".jpg";
+    captureImage(filename);
+    timestampBuffer.push_back(time);
+    gpsBuffer.push_back(processedGPSData);
+
+    if (isBluetoothConnected())
+    {
+        // Buffers also cleared after sending
+        sendToBluetooth(timestampBuffer, gpsBuffer);
+    }
+    else
+    {
+        std::cout << "SendToBluetooth: No connection" << std::endl;
+    }
 
     if (IMU_EN_SENSOR_TYPE_ICM20948 == sh.initializeMotionSensor())
     {
@@ -247,8 +275,6 @@ int main(int argc, char *argv[])
         int cooldownCounter = 0;
         float avgValue_beforePothole = 0;
         float avgValue = 0;
-        std::vector<long long> timestampBuffer;
-        std::vector<std::vector<std::string>> gpsBuffer;
 
         printf("Waiting for potholes...\n");
         for (int x = 0; x < 100000; x++)
