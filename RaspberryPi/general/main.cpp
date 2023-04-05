@@ -225,33 +225,7 @@ int main(int argc, char *argv[])
     configureGPS(parser);
     std::vector<long long> timestampBuffer;
     std::vector<std::vector<std::string>> gpsBuffer;
-
     std::vector<std::string> processedGPSData;
-
-    printf("Raspberry Pi has detected a pothole!\n");
-    sleep(1);
-    std::vector<std::string> ggaValues = getGPSData(parser);
-    if (!ggaValues.empty())
-    {
-        processedGPSData = parser.processGGAValues(ggaValues);
-    }
-
-    // Capture image creates two background processes that captures image and processes it.
-    auto time = getTimestamp();
-    std::string filename = "./images/image_" + std::to_string(time) + ".jpg";
-    captureImage(filename);
-    timestampBuffer.push_back(time);
-    gpsBuffer.push_back(processedGPSData);
-
-    if (isBluetoothConnected())
-    {
-        // Buffers also cleared after sending
-        sendToBluetooth(timestampBuffer, gpsBuffer);
-    }
-    else
-    {
-        std::cout << "SendToBluetooth: No connection" << std::endl;
-    }
 
     if (IMU_EN_SENSOR_TYPE_ICM20948 == sh.initializeMotionSensor())
     {
