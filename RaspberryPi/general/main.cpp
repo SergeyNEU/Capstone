@@ -30,11 +30,6 @@
 #include <unistd.h>
 #include <openssl/evp.h>
 
-const std::string base64_chars =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    "abcdefghijklmnopqrstuvwxyz"
-    "0123456789+/";
-
 std::string base64_encode(const std::string &input)
 {
     // Calculate the size of the output buffer, which is 4/3 the size of the input buffer.
@@ -69,11 +64,11 @@ void configureGPS(GPS &parser)
 
     if (serialPortConfiguration)
     {
-        printf("GPS: Configured (/dev/ttyUSB0).\n");
+        printf("GPS: Configured (/dev/ttyUSB0)\n");
     }
     else
     {
-        printf("GPS: Not Configured (/dev/ttyUSB0).\n");
+        printf("GPS: Not Configured (/dev/ttyUSB0)\n");
     }
 }
 
@@ -83,7 +78,7 @@ std::vector<std::string> getGPSData(GPS &parser)
 
     if (ggaValues.empty())
     {
-        printf("GPS: No output.\n");
+        printf("GPS: No output\n");
     }
 
     return ggaValues;
@@ -101,7 +96,7 @@ void sendToBluetooth(const std::vector<long long> &millisBuffer, const std::vect
 
     if (pid == -1)
     {
-        std::cerr << "sendToBluetooth Error: Failed to fork the process." << std::endl;
+        std::cerr << "sendToBluetooth Error: Failed to fork the process" << std::endl;
     }
     else if (pid == 0)
     {
@@ -176,6 +171,9 @@ void sendToBluetooth(const std::vector<long long> &millisBuffer, const std::vect
                 std::cout << "SendToBluetooth: Process timed out!" << std::endl;
             }
         }
+                            
+        timestampBuffer.clear();
+        gpsBuffer.clear();
 
         exit(0); // Ensure this child process exits after completing its tasks
     }
@@ -207,6 +205,13 @@ bool isBluetoothConnected()
 
     // Return true if the result is 0, meaning that the connection exists; otherwise, return false
     return (result == 0);
+}
+
+long long getTimestamp() {
+    auto now = std::chrono::system_clock::now();
+    auto duration = now.time_since_epoch();
+    auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+    return millis;
 }
 
 int main(int argc, char *argv[])
@@ -261,39 +266,33 @@ int main(int argc, char *argv[])
 
                 printf("Raspberry Pi has detected a pothole!\n");
 
-                // Get GPS coordinates
                 std::vector<std::string> ggaValues = getGPSData(parser);
                 if (!ggaValues.empty())
                 {
                     processedGPSData = parser.processGGAValues(ggaValues);
-                    //printGPSData(processedGPSData);
                 }
 
                 // Capture image creates two background processes that captures image and processes it.
-                auto now = std::chrono::system_clock::now();
-                auto duration = now.time_since_epoch();
-                auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-                std::string filename = "./images/image_" + std::to_string(millis) + ".jpg";
+                auto time = getTimestamp();
+                std::string filename = "./images/image_" + std::to_string(time) + ".jpg";
                 captureImage(filename);
-                timestampBuffer.push_back(millis);
+                timestampBuffer.push_back(time);
                 gpsBuffer.push_back(processedGPSData);
 
-                // Check if there is a valid Bluetooth connection before sending data
                 if (isBluetoothConnected())
                 {
-                    // Valid Bluetooth connection exists, proceed to send data
+                    // Buffers also cleared after sending
                     sendToBluetooth(timestampBuffer, gpsBuffer);
-                    timestampBuffer.clear(); // Clear the buffer after sending
-                    gpsBuffer.clear();
                 }
                 else
                 {
-                    // No valid Bluetooth connection found, skip sendToBluetooth and display a message
                     std::cout << "SendToBluetooth: No connection" << std::endl;
                 }
             }
         }
-    } else {
+    }
+    else
+    {
         printf("Motion Sensor: Not configured\n");
     }
     return 0;
