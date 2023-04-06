@@ -66,7 +66,7 @@ public class FolderScanThread extends Thread {
         } catch(NumberFormatException err) {
             return false;
         }
-        if(fileNum < mostRecentFile){
+        if(fileNum <= mostRecentFile){
             return false;
         }
         mostRecentFile = fileNum;
