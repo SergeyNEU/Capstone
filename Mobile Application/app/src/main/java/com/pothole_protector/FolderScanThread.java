@@ -81,6 +81,15 @@ public class FolderScanThread extends Thread {
             while ((line = br.readLine()) != null)   //returns a Boolean value
             {
                 String[] employee = line.split(",");
+
+                //get all fields
+
+
+
+                // send to database
+
+
+                // update map with markers for each pothole
             }
         } catch (IOException err){
             Log.e("PARSE FILE", "unable to read file");

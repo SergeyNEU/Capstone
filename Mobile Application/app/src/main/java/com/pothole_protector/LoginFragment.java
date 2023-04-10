@@ -3,6 +3,7 @@ package com.pothole_protector;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
+import androidx.room.EmptyResultSetException;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,6 +13,8 @@ import android.widget.EditText;
 
 import com.pothole_protector.database.AppDatabase;
 import com.pothole_protector.database.user.User;
+
+import java.util.Objects;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -39,7 +42,7 @@ public class LoginFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        database = AppDatabase.getDatabase(getActivity());
+        database = AppDatabase.getDatabase(requireActivity());
     }
 
     @Override
@@ -60,7 +63,7 @@ public class LoginFragment extends Fragment {
 
     private void regUser() {
         if(username.getText().toString().isEmpty() || password.getText().toString().isEmpty()){
-            // throw up an alert dialog
+            LoginActivity.showAlert("Username or Password invalid", "Please type in a username and password", "Okay", null, requireActivity());
         }
         else{
             // set up a user in database
@@ -68,7 +71,10 @@ public class LoginFragment extends Fragment {
             String setPassword = password.getText().toString();
 
             //check for duplicates
-
+            if(checkUserExists(setUsername)){
+                LoginActivity.showAlert("Username already in use", "Please make a different username", "Okay", null, requireActivity());
+                return;
+            }
 
 
             // send user to database
@@ -77,11 +83,21 @@ public class LoginFragment extends Fragment {
                 database.userDao().insertUser(newUser);
             }).start();
 
-
-
             // get rid of fragment
+            getActivity().onBackPressed();
+        }
+    }
 
+    private boolean checkUserExists(String usernameText) {
+        User user = null;
+        try {
+            user = database.userDao().getUser(usernameText).blockingGet();
+        }
+        catch (EmptyResultSetException err){
 
         }
+
+        //returns true if the user is in the database, false if the user is not in the database
+        return user != null;
     }
 }

@@ -27,7 +27,7 @@ public abstract class AppDatabase extends RoomDatabase {
     private static volatile AppDatabase databaseInstance;
 
     public static  AppDatabase getDatabase(final Context context){
-        databaseInstance = Room.databaseBuilder(context.getApplicationContext(), AppDatabase.class, "pothole_protector.db").build();
+        databaseInstance = Room.databaseBuilder(context.getApplicationContext(), AppDatabase.class, "pothole_protector.db").allowMainThreadQueries().build();
         return databaseInstance;
     }
 
