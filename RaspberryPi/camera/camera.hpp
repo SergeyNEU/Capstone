@@ -2,6 +2,7 @@
 #define CAMERA_HPP
 
 #include <string>
+#include <fstream>
 
 class Camera
 {

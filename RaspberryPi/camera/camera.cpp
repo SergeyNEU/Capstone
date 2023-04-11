@@ -59,7 +59,8 @@ int Camera::captureImage()
             }
             else if (pid_python == 0)
             {
-                usleep(200000); // 200 ms
+                usleep(800000); // 800 ms
+
                 // In the child process for running the Python script
                 chdir(script_directory.c_str()); // Change the working directory to the script's directory
                 execl("/bin/sh", "sh", "-c", python_command.c_str(), (char *)NULL);

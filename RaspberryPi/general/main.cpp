@@ -22,7 +22,6 @@
 #include <deque>
 #include <vector>
 #include <string>
-#include <fstream>
 #include <sstream>
 #include <iterator>
 #include <dirent.h>
@@ -113,7 +112,7 @@ void sendToBluetooth(std::vector<long long> &millisBuffer, std::vector<std::vect
             // Continuously check if the corresponding .txt file exists and is not empty
             bool fileFound = false;
             int timeout_val = 0;
-            int timeout_limit = 150;
+            int timeout_limit = 100;
             while (!fileFound && timeout_val < timeout_limit)
             {
                 std::ifstream txtFile(txtFilename);
@@ -125,39 +124,46 @@ void sendToBluetooth(std::vector<long long> &millisBuffer, std::vector<std::vect
                     if (line == "")
                     {
                         timeout_val = timeout_limit + 1;
-                        std::cout << "SendToBluetooth: No pothole processed" << std::endl;
-                        continue;
+                        std::cout << "SendToBluetooth: No pothole processed ("
+                                  << "image_" + timestamp + ".txt"
+                                  << ")" << std::endl;
                     }
+                    else
+                    {
+                        fileFound = true;
+                        std::cerr << "sendToBluetooth: Pothole found ("
+                                  << "image_" + timestamp + ".txt"
+                                  << ")" << std::endl;
 
-                    fileFound = true;
-                    std::cerr << "sendToBluetooth: Pothole found" << std::endl;
+                        // Extract the second value (certainty percentage) from the file
+                        std::istringstream iss(line);
+                        std::vector<std::string> tokens(std::istream_iterator<std::string>{iss}, std::istream_iterator<std::string>());
+                        float certaintyValue = std::stof(tokens[1]);
 
-                    // Extract the second value (certainty percentage) from the file
-                    std::istringstream iss(line);
-                    std::vector<std::string> tokens(std::istream_iterator<std::string>{iss}, std::istream_iterator<std::string>());
-                    float certaintyValue = std::stof(tokens[1]);
+                        // Convert the processed image to base64
+                        std::ifstream imageFile(processedImageFilename, std::ios::binary);
+                        std::string imageString((std::istreambuf_iterator<char>(imageFile)), std::istreambuf_iterator<char>());
+                        std::string base64Image = base64_encode(imageString);
 
-                    // Convert the processed image to base64
-                    std::ifstream imageFile(processedImageFilename, std::ios::binary);
-                    std::string imageString((std::istreambuf_iterator<char>(imageFile)), std::istreambuf_iterator<char>());
-                    std::string base64Image = base64_encode(imageString);
+                        // Write buffered data to CSV file
+                        const auto &processedData = gpsBuffer[i];
+                        std::ofstream csvFile(csvFilename);
+                        csvFile << processedData[1] << "," << processedData[2] << "," << processedData[3] << "," << processedData[5] << "," << processedData[6] << "," << processedData[7] << "," << certaintyValue << "," << base64Image;
+                        csvFile.close();
+                        std::cout << processedData[1] << "," << processedData[2] << "," << processedData[3] << "," << processedData[5] << "," << processedData[6] << "," << processedData[7] << "," << certaintyValue << std::endl;
+                        const std::string bt_addr = "B4:F1:DA:66:C3:A5"; // Bluetooth address for the Android phone (case sensitive)
+                        int ftp_channel = 12;                            // FTP channel number. Make sure it is the correct channel number.
+                        std::cout << "SendToBluetooth: About to Send via BT ("
+                                  << "pothole_image_" + timestamp + ".csv"
+                                  << ")" << std::endl;
 
-                    // Write buffered data to CSV file
-                    const auto &processedData = gpsBuffer[i];
-                    std::ofstream csvFile(csvFilename);
-                    csvFile << processedData[1] << "," << processedData[2] << "," << processedData[3] << "," << processedData[5] << "," << processedData[6] << "," << processedData[7] << "," << certaintyValue << "," << base64Image;
-                    csvFile.close();
-
-                    const std::string bt_addr = "B4:F1:DA:66:C3:A5"; // Bluetooth address for the Android phone (case sensitive)
-                    int ftp_channel = 12;                            // FTP channel number. Make sure it is the correct channel number.
-                    std::cout << "SendToBluetooth: About to Send via BT" << std::endl;
-
-                    // Declare a stringstream variable to store the obexftp command string
-                    std::stringstream command;
-                    // Populate the command string with the appropriate parameters
-                    command << "obexftp --nopath --noconn --uuid none --bluetooth " << bt_addr << " --channel " << ftp_channel << " -p " << csvFilename;
-                    // Execute the command using the system() function and store the result in an int variable
-                    int result = std::system(command.str().c_str());
+                        // Declare a stringstream variable to store the obexftp command string
+                        std::stringstream command;
+                        // Populate the command string with the appropriate parameters
+                        command << "obexftp --nopath --noconn --uuid none --bluetooth " << bt_addr << " --channel " << ftp_channel << " -p " << csvFilename;
+                        // Execute the command using the system() function and store the result in an int variable
+                        int result = std::system(command.str().c_str());
+                    }
                 }
                 else
                 {
@@ -174,6 +180,8 @@ void sendToBluetooth(std::vector<long long> &millisBuffer, std::vector<std::vect
 
         millisBuffer.clear();
         gpsBuffer.clear();
+        millisBuffer.shrink_to_fit();
+        gpsBuffer.shrink_to_fit();
 
         exit(0); // Ensure this child process exits after completing its tasks
     }
@@ -279,7 +287,7 @@ int main(int argc, char *argv[])
                 timestampBuffer.push_back(time);
                 gpsBuffer.push_back(processedGPSData);
 
-                if (isBluetoothConnected())
+                if (!isBluetoothConnected())
                 {
                     // Buffers also cleared after sending
                     sendToBluetooth(timestampBuffer, gpsBuffer);
