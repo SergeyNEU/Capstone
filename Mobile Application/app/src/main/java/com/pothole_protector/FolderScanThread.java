@@ -82,6 +82,17 @@ public class FolderScanThread extends Thread {
             {
                 String[] employee = line.split(",");
 
+
+                //String timeStamp = employee[0];
+                //String latitude = employee[1];
+                //String longitude = employee[2];
+                //String image = employee[3];
+                //String image = employee[3];
+                //String image = employee[3];
+                //String image = employee[3];
+                //String potholeProb = employee[6];
+                //String image = employee[7];
+
                 //get all fields
 
 

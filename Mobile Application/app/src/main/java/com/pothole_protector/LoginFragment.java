@@ -3,6 +3,8 @@ package com.pothole_protector;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.room.EmptyResultSetException;
 
 import android.view.LayoutInflater;
@@ -78,13 +80,19 @@ public class LoginFragment extends Fragment {
 
 
             // send user to database
-            new Thread(() -> {
-                User newUser = new User(setUsername, setPassword);
-                database.userDao().insertUser(newUser);
+            new Thread(new Runnable() {
+                public void run() {
+                    // a potentially time consuming task
+                    User newUser = new User(setUsername, setPassword);
+                    database.userDao().insertUser(newUser);
+                }
             }).start();
 
-            // get rid of fragment
-            getActivity().onBackPressed();
+            FragmentManager fm = getFragmentManager();
+            FragmentTransaction ft = fm.beginTransaction();
+            LoginFragment f = (LoginFragment) fm.findFragmentByTag("LOGIN_FRAGMENT");
+            ft.remove(f);
+            ft.commit();
         }
     }
 

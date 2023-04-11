@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:theme="@style/Theme.Material3.Light"
+    android:theme="@style/Theme.AppCompat.Light"
     android:background="@color/beige"
     tools:context=".LoginActivity">
 
@@ -22,11 +22,14 @@
     android:paddingRight="20dp"
     android:paddingLeft="20dp">
 
-    <ImageView
+    <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/logo"
-        android:adjustViewBounds="true"/>
+        android:text="@string/tpp"
+        android:textColor="@color/white"
+        android:fontFamily="oswald"
+        android:layout_gravity="center_horizontal"
+        android:textSize="128sp"/>
 
 
     <EditText
@@ -34,6 +37,9 @@
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
         android:hint="@string/username"
+        app:backgroundTint="@color/white"
+        android:textColor="@color/white"
+        android:textColorHint="@color/white"
         android:imeOptions="actionSend"
         />
 
@@ -42,6 +48,9 @@
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
         android:hint="@string/password"
+        app:backgroundTint="@color/white"
+        android:textColor="@color/white"
+        android:textColorHint="@color/white"
         android:inputType="textPassword"
         android:imeOptions="actionSend"
         />
@@ -55,6 +64,7 @@
         android:id="@+id/sign_up"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:textColor="@color/white"
         android:text="@string/sign_up"/>
 </LinearLayout>
 

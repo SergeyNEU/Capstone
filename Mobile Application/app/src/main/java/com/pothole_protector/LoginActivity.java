@@ -110,7 +110,7 @@ public class LoginActivity extends AppCompatActivity {
     private void addUser() {
         Fragment createUser = LoginFragment.newInstance();
         FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.beginTransaction().replace(R.id.create_user_fragment_container_view,createUser).commit();
+        fragmentManager.beginTransaction().add(R.id.create_user_fragment_container_view,createUser,"LOGIN_FRAGMENT").commit();
         // commit add user fragment
     }
 }
