@@ -178,17 +178,18 @@ void sendToBluetooth(std::vector<long long> &millisBuffer, std::vector<std::vect
             }
         }
 
-        millisBuffer.clear();
-        gpsBuffer.clear();
-        millisBuffer.shrink_to_fit();
-        gpsBuffer.shrink_to_fit();
-
         exit(0); // Ensure this child process exits after completing its tasks
     }
     else
     {
         // Parent process
         std::cout << "SendToBluetooth process started. Process ID: " << pid << std::endl;
+
+        int status;
+        waitpid(pid, &status, 0);
+
+        millisBuffer.clear();
+        gpsBuffer.clear();
     }
 }
 
@@ -287,7 +288,7 @@ int main(int argc, char *argv[])
                 timestampBuffer.push_back(time);
                 gpsBuffer.push_back(processedGPSData);
 
-                if (!isBluetoothConnected())
+                if (isBluetoothConnected())
                 {
                     // Buffers also cleared after sending
                     sendToBluetooth(timestampBuffer, gpsBuffer);
@@ -298,6 +299,7 @@ int main(int argc, char *argv[])
                 }
             }
         }
+
     }
     else
     {
