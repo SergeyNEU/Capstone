@@ -9,14 +9,17 @@ import android.bluetooth.BluetoothManager;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.webkit.WebView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -25,6 +28,9 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.material.bottomnavigation.BottomNavigationMenuView;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.navigation.NavigationBarView;
 
 import java.util.Set;
 
@@ -33,14 +39,52 @@ public class BluetoothActivity extends AppCompatActivity  implements OnMapReadyC
     String piName;
     String piMacAddr;
     GoogleMap myMap = null;
+    String curActiveFrag;
+    BottomNavigationView menu;
+    String user;
+
+    Fragment map;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_bluetooth);
 
+        Bundle b = getIntent().getExtras();
+        user = b.getString("user");
+
         BluetoothManager bluetoothManager = getSystemService(BluetoothManager.class);
         BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
+
+        menu = findViewById(R.id.bottomNavigationView);
+        menu.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.map:
+                        FragmentManager fm = getSupportFragmentManager();
+                        FragmentTransaction ft = fm.beginTransaction();
+                        ft.remove(fm.findFragmentByTag(curActiveFrag));
+                        ft.commit();
+                        return true;
+
+                    case R.id.manual:
+                        curActiveFrag = "MANUAL_FRAGMENT";
+                        switchToFragment(ManualDetectionFragment.newInstance(), "MANUAL_FRAGMENT");
+                        return true;
+                    case R.id.settings:
+                        curActiveFrag = "SETTINGS_FRAGMENT";
+                        Bundle args = new Bundle();
+                        args.putString("user", user);
+                        SettingsFragment f = SettingsFragment.newInstance();
+                        f.setArguments(args);
+                        switchToFragment(f, "SETTINGS_FRAGMENT");
+                        return true;
+                }
+                return false;
+            }
+        });
+
 
         // bluetooth server is created in case we ever wanna update to connect stratight to app
         @SuppressLint("MissingPermission") Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
@@ -60,6 +104,13 @@ public class BluetoothActivity extends AppCompatActivity  implements OnMapReadyC
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        map = mapFragment;
+
+    }
+
+    public void switchToFragment(Fragment fragment, String tag) {
+        FragmentManager manager = getSupportFragmentManager();
+        manager.beginTransaction().replace(R.id.map, fragment, tag).commit();
     }
 
     private void displayNotification(int i) {

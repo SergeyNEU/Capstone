@@ -33,4 +33,9 @@
     <string name="manual_submission">Manual submission</string>
     <string name="settings">Settings</string>
     <string name="tpp">TPP</string>
+    <string name="get_location">Get location</string>
+    <string name="take_picture">Take Picture</string>
+    <string name="report_manually">Report Manually</string>
+    <string name="current_user">Current User: </string>
+    <string name="sign_out">Sign Out</string>
 </resources>

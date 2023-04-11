@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/person"
+        android:id="@+id/map"
         android:title="@string/map"
         android:icon="@drawable/ic_map_foreground"/>
     <item
-        android:id="@+id/home"
+        android:id="@+id/manual"
         android:title="@string/manual_submission"
         android:icon="@drawable/ic_manual_detection_foreground"/>
     <item
