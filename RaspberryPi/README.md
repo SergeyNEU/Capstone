@@ -6,9 +6,6 @@ C++ code for capturing images using the Raspberry Pi Camera Module V2.
 ## sensehat
 C++ code for using a Raspberry Pi Sense HAT to read accelerometer and gyroscope data.
 
-
-# IN PROGRESS
-
 ## machineLearning.cpp
 C++ code for loading, preparing, and training a machine learning model on a dataset of images of potholes and non-potholes, and using the trained model to make predictions on new images.
 
